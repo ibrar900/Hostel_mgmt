@@ -1,0 +1,19 @@
+{% extends "base.html" %} {% block title %}Edit Student{% endblock %} {% block topbar_title %}Edit Student{% endblock %} {% block content %}
+Edit Student
+Back
+{{ student.usn }} — {{ student.name }}
+Full Name * 
+{{ student.name }}
+Email 
+{{ student.email or '' }}
+Phone 
+{{ student.phone or '' }}
+Father's Phone 
+{{ student.father_phone or '' }}
+Mother's Phone 
+{{ student.mother_phone or '' }}
+Food Preference 
+Vegetarian
+Save Changes
+Cancel
+{% endblock %}
