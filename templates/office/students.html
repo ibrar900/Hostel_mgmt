@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Students{% endblock %}
+{% block topbar_title %}Onboarded Students{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-users" style="color:var(--accent);margin-right:10px;"></i>Onboarded Students</h1>
+  <button class="btn btn-outline no-print" onclick="window.print()">
+    <i class="fas fa-print"></i> Print
+  </button>
+</div>
+
+<!-- Filters -->
+<div class="card no-print" style="margin-bottom:18px;">
+  <div class="card-body">
+    <form method="GET" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+      <div class="form-group" style="margin-bottom:0;min-width:180px;">
+        <label class="form-label">Search</label>
+        <input type="text" class="form-control" name="q" value="{{ q or '' }}" placeholder="Name or USN" />
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">Hostel</label>
+        <select class="form-select" name="hostel">
+          <option value="all" {{ 'selected' if hfilter == 'all' else '' }}>All</option>
+          <option value="B"   {{ 'selected' if hfilter == 'B'   else '' }}>Boys</option>
+          <option value="G"   {{ 'selected' if hfilter == 'G'   else '' }}>Girls</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">Programme</label>
+        <input type="text" class="form-control" name="programme" value="{{ prog or '' }}" placeholder="e.g. B.E" style="width:120px;" />
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">Semester</label>
+        <input type="text" class="form-control" name="semester" value="{{ sem or '' }}" placeholder="e.g. 5" style="width:80px;" />
+      </div>
+      <button type="submit" class="btn btn-navy" style="margin-bottom:0;">
+        <i class="fas fa-search"></i> Search
+      </button>
+      <a href="{{ url_for('office.students') }}" class="btn btn-outline" style="margin-bottom:0;">
+        <i class="fas fa-redo"></i> Reset
+      </a>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-list"></i> Students
+      <span style="font-size:0.8rem;font-weight:400;color:var(--text-muted);margin-left:6px;">
+        ({{ total }} total, showing {{ students | length }})
+      </span>
+    </h3>
+  </div>
+  <div class="card-body no-pad">
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>USN</th>
+            <th>Hostel</th>
+            <th>Room</th>
+            <th>Programme</th>
+            <th>Sem</th>
+            <th>Phone</th>
+            <th>Food</th>
+            <th>Total Fees</th>
+            <th>Paid</th>
+            <th>Due</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in students %}
+          {% set due = [s.total_fees - s.paid_fees, 0] | max %}
+          <tr>
+            <td class="text-small text-muted">{{ loop.index + (page-1)*per_page }}</td>
+            <td><strong>{{ s.name }}</strong></td>
+            <td><code>{{ s.usn }}</code></td>
+            <td>
+              {% if s.hostel_code %}
+              <span class="badge" style="{{ 'background:rgba(13,27,75,0.1);color:var(--navy);' if s.hostel_code == 'B' else 'background:rgba(106,27,154,0.1);color:#6a1b9a;' }}">
+                {{ 'Boys' if s.hostel_code == 'B' else 'Girls' }}
+              </span>
+              {% else %}—{% endif %}
+            </td>
+            <td>{{ s.room_number or '—' }}</td>
+            <td class="text-small">{{ s.programme or '—' }}</td>
+            <td>{{ s.semester or '—' }}</td>
+            <td class="text-small">{{ s.phone or '—' }}</td>
+            <td>
+              <span class="badge {{ 'badge-approved' if s.food_preference == 'veg' else 'badge-pending' }}">
+                {{ s.food_preference | title }}
+              </span>
+            </td>
+            <td>{% if s.total_fees > 0 %}&#8377;{{ "%.0f"|format(s.total_fees) }}{% else %}—{% endif %}</td>
+            <td style="color:var(--success);">{% if s.paid_fees > 0 %}&#8377;{{ "%.0f"|format(s.paid_fees) }}{% else %}—{% endif %}</td>
+            <td>
+              {% if due > 0 %}
+              <strong style="color:var(--danger);">&#8377;{{ "%.0f"|format(due) }}</strong>
+              {% else %}
+              <span style="color:var(--success);">Nil</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="12" style="text-align:center;padding:32px;color:var(--text-muted);">
+              No students found.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  {% if total > per_page %}
+  <div style="padding:12px 22px;border-top:1px solid var(--border);display:flex;gap:8px;">
+    {% if page > 1 %}
+    <a href="{{ url_for('office.students', q=q, hostel=hfilter, programme=prog, semester=sem, page=page-1) }}"
+       class="btn btn-outline btn-sm">&#8592; Prev</a>
+    {% endif %}
+    <span style="line-height:32px;font-size:0.85rem;color:var(--text-muted);">
+      Page {{ page }} of {{ ((total - 1) // per_page) + 1 }}
+    </span>
+    {% if page * per_page < total %}
+    <a href="{{ url_for('office.students', q=q, hostel=hfilter, programme=prog, semester=sem, page=page+1) }}"
+       class="btn btn-outline btn-sm">Next &#8594;</a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
