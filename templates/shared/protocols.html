@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block title %}Hostel Protocols{% endblock %}
+{% block topbar_title %}Hostel Protocols & Rules{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-shield-alt" style="color:var(--accent);margin-right:10px;"></i>Hostel Protocols &amp; Rules</h1>
+  <button class="btn btn-outline no-print" onclick="window.print()">
+    <i class="fas fa-print"></i> Print
+  </button>
+</div>
+
+<!-- Emergency Contacts -->
+<div class="card" style="margin-bottom:22px;">
+  <div class="card-header">
+    <h3><i class="fas fa-phone-alt" style="color:var(--danger);"></i> Emergency Contact Numbers</h3>
+  </div>
+  <div class="card-body">
+    <div class="grid-2" style="gap:16px;">
+      {% for w in wardens %}
+      <div style="display:flex;align-items:center;gap:14px;padding:12px;background:var(--bg-secondary);border-radius:8px;">
+        <div style="width:42px;height:42px;border-radius:50%;background:var(--navy);color:#fff;
+                    display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">
+          <i class="fas fa-user-shield"></i>
+        </div>
+        <div>
+          <div style="font-weight:600;font-size:0.95rem;">{{ w.full_name }}</div>
+          <div style="font-size:0.8rem;color:var(--text-muted);">
+            {{ 'Boys Hostel Warden' if w.role == 'warden_boys' else 'Girls Hostel Warden' }}
+          </div>
+          <div style="font-size:0.9rem;color:var(--accent);font-weight:600;">
+            <i class="fas fa-phone"></i> {{ w.phone or 'N/A' }}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+      {% if chairman %}
+      <div style="display:flex;align-items:center;gap:14px;padding:12px;background:var(--bg-secondary);border-radius:8px;">
+        <div style="width:42px;height:42px;border-radius:50%;background:var(--gold);color:#fff;
+                    display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">
+          <i class="fas fa-user-tie"></i>
+        </div>
+        <div>
+          <div style="font-weight:600;font-size:0.95rem;">{{ chairman.full_name }}</div>
+          <div style="font-size:0.8rem;color:var(--text-muted);">Chairman / Principal</div>
+          <div style="font-size:0.9rem;color:var(--accent);font-weight:600;">
+            <i class="fas fa-phone"></i> {{ chairman.phone or 'N/A' }}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Movement Timings -->
+<div class="card" style="margin-bottom:22px;">
+  <div class="card-header">
+    <h3><i class="fas fa-clock" style="color:var(--gold);"></i> Movement Timings</h3>
+  </div>
+  <div class="card-body">
+    <div class="grid-2" style="gap:16px;">
+      <div style="padding:16px;background:#fff3e0;border-left:4px solid var(--gold);border-radius:6px;">
+        <div style="font-weight:700;font-size:1rem;color:var(--gold);margin-bottom:6px;">
+          <i class="fas fa-male"></i> Boys Hostel
+        </div>
+        <div style="font-size:1.5rem;font-weight:700;color:var(--navy);">9:30 PM</div>
+        <div style="font-size:0.85rem;color:var(--text-muted);">All students must be back by 9:30 PM</div>
+      </div>
+      <div style="padding:16px;background:#fce4ec;border-left:4px solid var(--danger);border-radius:6px;">
+        <div style="font-weight:700;font-size:1rem;color:var(--danger);margin-bottom:6px;">
+          <i class="fas fa-female"></i> Girls Hostel
+        </div>
+        <div style="font-size:1.5rem;font-weight:700;color:var(--navy);">7:30 PM</div>
+        <div style="font-size:0.85rem;color:var(--text-muted);">All students must be back by 7:30 PM</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Mess Timings -->
+<div class="card" style="margin-bottom:22px;">
+  <div class="card-header">
+    <h3><i class="fas fa-utensils" style="color:var(--success);"></i> Mess Timings</h3>
+  </div>
+  <div class="card-body">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;">
+      {% for meal, time, icon, color in [
+        ('Breakfast','7:30 AM – 9:00 AM','fa-sun','#ff9800'),
+        ('Lunch','12:30 PM – 2:00 PM','fa-cloud-sun','#2196f3'),
+        ('Snacks','4:30 PM – 5:30 PM','fa-coffee','#9c27b0'),
+        ('Dinner','7:30 PM – 9:00 PM','fa-moon','#1a237e')
+      ] %}
+      <div style="text-align:center;padding:16px;background:var(--bg-secondary);border-radius:10px;">
+        <div style="font-size:2rem;color:{{ color }};margin-bottom:8px;">
+          <i class="fas {{ icon }}"></i>
+        </div>
+        <div style="font-weight:700;font-size:0.95rem;color:var(--navy);">{{ meal }}</div>
+        <div style="font-size:0.85rem;color:var(--text-muted);margin-top:4px;">{{ time }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Rules & Regulations -->
+<div class="card" style="margin-bottom:22px;">
+  <div class="card-header">
+    <h3><i class="fas fa-list-check"></i> Rules &amp; Regulations</h3>
+  </div>
+  <div class="card-body">
+    <div class="grid-2" style="gap:22px;">
+
+      <div>
+        <h4 style="color:var(--success);margin-bottom:12px;font-size:0.95rem;">
+          <i class="fas fa-check-circle"></i> Do's
+        </h4>
+        <ul style="list-style:none;padding:0;display:flex;flex-direction:column;gap:8px;">
+          {% for item in [
+            'Maintain cleanliness in your room and common areas.',
+            'Sign out and sign in when leaving / returning to hostel.',
+            'Return before curfew time without fail.',
+            'Respect hostel staff and fellow residents.',
+            'Keep the mess clean and avoid wastage of food.',
+            'Report any damages or maintenance issues promptly.',
+            'Carry your hostel ID card at all times.',
+            'Switch off lights, fans and electrical appliances when not in use.',
+            'Inform warden before going home for weekends.',
+            'Follow the mess timings strictly.'
+          ] %}
+          <li style="display:flex;align-items:flex-start;gap:8px;font-size:0.88rem;">
+            <i class="fas fa-check" style="color:var(--success);margin-top:3px;flex-shrink:0;"></i>
+            {{ item }}
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <div>
+        <h4 style="color:var(--danger);margin-bottom:12px;font-size:0.95rem;">
+          <i class="fas fa-times-circle"></i> Don'ts
+        </h4>
+        <ul style="list-style:none;padding:0;display:flex;flex-direction:column;gap:8px;">
+          {% for item in [
+            'Do not stay outside hostel after curfew time.',
+            'Do not bring unauthorised visitors to your room.',
+            'No consumption of alcohol, tobacco or drugs on premises.',
+            'Do not make noise after 10:00 PM (quiet hours).',
+            'Do not cook in your room — use the common kitchen only.',
+            'Do not tamper with electrical fittings or fire safety equipment.',
+            'Do not use the hostel address for commercial activities.',
+            'No ragging in any form — zero tolerance policy.',
+            'Do not sublet your room to others.',
+            'Do not damage hostel property.'
+          ] %}
+          <li style="display:flex;align-items:flex-start;gap:8px;font-size:0.88rem;">
+            <i class="fas fa-times" style="color:var(--danger);margin-top:3px;flex-shrink:0;"></i>
+            {{ item }}
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Discipline -->
+<div class="card" style="border-left:4px solid var(--danger);">
+  <div class="card-body">
+    <div style="display:flex;align-items:flex-start;gap:14px;">
+      <i class="fas fa-exclamation-triangle" style="font-size:1.8rem;color:var(--danger);flex-shrink:0;"></i>
+      <div>
+        <div style="font-weight:700;margin-bottom:6px;">Disciplinary Action</div>
+        <div style="font-size:0.88rem;color:var(--text-muted);">
+          Any violation of hostel rules may result in a warning, fine, or expulsion from the hostel.
+          Serious misconduct may be reported to the college disciplinary committee.
+          Students are expected to cooperate fully with hostel staff and warden at all times.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
