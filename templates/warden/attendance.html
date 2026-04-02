@@ -1,0 +1,25 @@
+{% extends "base.html" %} {% block title %}Attendance{% endblock %} {% block topbar_title %}Mark Attendance{% endblock %} {% block content %}
+Attendance
+{% if already_marked %} Already Marked for {{ selected_date }} {% endif %}
+Attendance Cut-off: No out-pass requests accepted after 7:30 PM. Students on approved permissions are pre-marked as Out of Station.
+Attendance Date
+
+dd-mm-yyyy
+Upload Biometric CSV
+No file chosen
+Upload
+Mark All As
+All Present
+All Absent
+Student Attendance — {{ selected_date or today }} ({{ students | length if students else 0 }} students)
+Save Attendance
+{% if students %} {% for s in students %} {% set is_oos = s.id in auto_out %} {% endfor %} {% else %} {% endif %}
+#	Name	USN	Room	Status	Note
+{{ loop.index }}	{{ s.name }} {% if is_oos %} On Permission {% endif %}	{{ s.usn }}	{{ s.room_number }}	
+ Present  Absent  On Leave  Out of Station
+{{ notes.get(s.id, '') if notes is defined else '' }}
+No students found. Add students first.
+{% if students %}
+Save Attendance for {{ selected_date or today }}
+{% endif %}
+{% endblock %}
