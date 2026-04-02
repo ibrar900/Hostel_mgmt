@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}Menu Management{% endblock %}
+{% block topbar_title %}Menu Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-clipboard-list" style="color:var(--accent);margin-right:10px;"></i>Menu Management</h1>
+  <div style="font-size:0.82rem;color:var(--text-muted);">
+    Set weekly menus for Boys and Girls Hostels
+  </div>
+</div>
+
+<div class="notice-box info" style="margin-bottom:20px;">
+  <i class="fas fa-info-circle"></i>
+  <span>Menus are applied per hostel. Changes saved here will be visible to students and wardens immediately.</span>
+</div>
+
+<!-- 7-day weekly grid -->
+{% set week_days = week_days or [
+  {'date': '', 'label': 'Monday', 'menu_id': None},
+  {'date': '', 'label': 'Tuesday', 'menu_id': None},
+  {'date': '', 'label': 'Wednesday', 'menu_id': None},
+  {'date': '', 'label': 'Thursday', 'menu_id': None},
+  {'date': '', 'label': 'Friday', 'menu_id': None},
+  {'date': '', 'label': 'Saturday', 'menu_id': None},
+  {'date': '', 'label': 'Sunday', 'menu_id': None},
+] %}
+
+{% for day in week_days %}
+<div class="card" style="margin-bottom:18px;">
+  <div class="card-header"
+       style="background:{{ 'linear-gradient(90deg,var(--navy),var(--blue))' if day.is_today else 'var(--white)' }};
+              {{ 'color:#fff;' if day.is_today else '' }}">
+    <h3 style="{{ 'color:#fff;' if day.is_today else '' }}">
+      <i class="fas fa-calendar-day"></i>
+      {{ day.label }}
+      <span style="font-size:0.78rem;font-weight:400;margin-left:8px;
+                   {{ 'color:rgba(255,255,255,0.7);' if day.is_today else 'color:var(--text-muted);' }}">
+        {{ day.date }}
+      </span>
+      {% if day.is_today %}
+        <span class="badge" style="background:rgba(255,255,255,0.2);color:#fff;margin-left:6px;">Today</span>
+      {% endif %}
+    </h3>
+  </div>
+
+  <div class="card-body">
+    <form method="POST" action="{{ url_for('vendor.save_menu') }}">
+      <input type="hidden" name="csrf_token"
+             value="{{ csrf_token() if csrf_token is defined else '' }}" />
+      <input type="hidden" name="date" value="{{ day.date }}" />
+      {% if day.menu_id %}<input type="hidden" name="menu_id" value="{{ day.menu_id }}" />{% endif %}
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:16px;">
+
+        <!-- Boys Hostel column -->
+        <div>
+          <div style="font-weight:600;color:var(--navy);margin-bottom:12px;font-size:0.88rem;
+                      display:flex;align-items:center;gap:7px;">
+            <i class="fas fa-male" style="color:var(--blue);"></i> Boys Hostel
+          </div>
+
+          <!-- Breakfast Boys -->
+          <div style="background:var(--light);border-radius:var(--radius-sm);padding:12px;margin-bottom:10px;">
+            <div style="font-size:0.78rem;font-weight:600;color:var(--warning);
+                        text-transform:uppercase;margin-bottom:8px;">
+              <i class="fas fa-sun"></i> Breakfast
+            </div>
+            <div class="form-group" style="margin-bottom:8px;">
+              <label class="form-label" style="font-size:0.72rem;">
+                <i class="fas fa-leaf" style="color:var(--success);"></i> Veg Items
+              </label>
+              <textarea class="form-control" name="boys_breakfast_veg" rows="2"
+                        placeholder="e.g. Idli, Sambar, Coconut Chutney"
+                        style="font-size:0.82rem;">{{ day.boys.breakfast_veg if day.boys is defined else '' }}</textarea>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" style="font-size:0.72rem;">
+                <i class="fas fa-drumstick-bite" style="color:var(--danger);"></i> Non-Veg Items
+              </label>
+              <textarea class="form-control" name="boys_breakfast_nonveg" rows="2"
+                        placeholder="e.g. Egg Bhurji, Toast"
+                        style="font-size:0.82rem;">{{ day.boys.breakfast_nonveg if day.boys is defined else '' }}</textarea>
+            </div>
+          </div>
+
+          <!-- Lunch Boys -->
+          <div style="background:var(--light);border-radius:var(--radius-sm);padding:12px;margin-bottom:10px;">
+            <div style="font-size:0.78rem;font-weight:600;color:var(--success);
+                        text-transform:uppercase;margin-bottom:8px;">
+              <i class="fas fa-cloud-sun"></i> Lunch
+            </div>
+            <div class="form-group" style="margin-bottom:8px;">
+              <label class="form-label" style="font-size:0.72rem;">
+                <i class="fas fa-leaf" style="color:var(--success);"></i> Veg Items
+              </label>
+              <textarea class="form-control" name="boys_lunch_veg" rows="2"
+                        placeholder="e.g. Rice, Dal, Sabzi, Roti, Salad"
+                        style="font-size:0.82rem;">{{ day.boys.lunch_veg if day.boys is defined else '' }}</textarea>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" style="font-size:0.72rem;">
+                <i class="fas fa-drumstick-bite" style="color:var(--danger);"></i> Non-Veg Items
+              </label>
+              <textarea class="form-control" name="boys_lunch_nonveg" rows="2"
+                        placeholder="e.g. Chicken Curry, Rice"
+                        style="font-size:0.82rem;">{{ day.boys.lunch_nonveg if day.boys is defined else '' }}</textarea>
+            </div>
+          </div>
+
+          <!-- Dinner Boys -->
+          <div style="background:var(--light);border-radius:var(--radius-sm);padding:12px;">
+            <div style="font-size:0.78rem;font-weight:600;color:var(--blue);
+                        text-transform:uppercase;margin-bottom:8px;">
+              <i class="fas fa-moon"></i> Dinner
+            </div>
+            <div class="form-group" style="margin-bottom:8px;">
+              <label class="form-label" style="font-size:0.72rem;">
+                <i class="fas fa-leaf" style="color:var(--success);"></i> Veg Items
+              </label>
+              <textarea class="form-control" name="boys_dinner_veg" rows="2"
+                        placeholder="e.g. Chapathi, Paneer, Curd"
+                        style="font-size:0.82rem;">{{ day.boys.dinner_veg if day.boys is defined else '' }}</textarea>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" style="font-size:0.72rem;">
+                <i class="fas fa-drumstick-bite" style="color:var(--danger);"></i> Non-Veg Items
+              </label>
+              <textarea class="form-control" name="boys_dinner_nonveg" rows="2"
+                        placeholder="e.g. Fish Curry, Rice"
+                        style="font-size:0.82rem;">{{ day.boys.dinner_nonveg if day.boys is defined else '' }}</textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Girls Hostel column -->
+        <div>
+          <div style="font-weight:600;color:#6a1b9a;margin-bottom:12px;font-size:0.88rem;
+                      display:flex;align-items:center;gap:7px;">
+            <i class="fas fa-female" style="color:#ab47bc;"></i> Girls Hostel
+          </div>
+
+          <!-- Breakfast Girls -->
+          <div style="background:var(--light);border-radius:var(--radius-sm);padding:12px;margin-bottom:10px;">
+            <div style="font-size:0.78rem;font-weight:600;color:var(--warning);
+                        text-transform:uppercase;margin-bottom:8px;">
+              <i class="fas fa-sun"></i> Breakfast
+            </div>
+            <div class="form-group" style="margin-bottom:8px;">
+              <label class="form-label" style="font-size:0.72rem;">
+                <i class="fas fa-leaf" style="color:var(--success);"></i> Veg Items
+              </label>
+              <textarea class="form-control" name="girls_breakfast_veg" rows="2"
+                        placeholder="e.g. Idli, Sambar, Coconut Chutney"
+                        style="font-size:0.82rem;">{{ day.girls.breakfast_veg if day.girls is defined else '' }}</textarea>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" style="font-size:0.72rem;">
+                <i class="fas fa-drumstick-bite" style="color:var(--danger);"></i> Non-Veg Items
+              </label>
+              <textarea class="form-control" name="girls_breakfast_nonveg" rows="2"
+                        placeholder="e.g. Egg Bhurji, Toast"
+                        style="font-size:0.82rem;">{{ day.girls.breakfast_nonveg if day.girls is defined else '' }}</textarea>
+            </div>
+          </div>
+
+          <!-- Lunch Girls -->
+          <div style="background:var(--light);border-radius:var(--radius-sm);padding:12px;margin-bottom:10px;">
+            <div style="font-size:0.78rem;font-weight:600;color:var(--success);
+                        text-transform:uppercase;margin-bottom:8px;">
+              <i class="fas fa-cloud-sun"></i> Lunch
+            </div>
+            <div class="form-group" style="margin-bottom:8px;">
+              <label class="form-label" style="font-size:0.72rem;">
+                <i class="fas fa-leaf" style="color:var(--success);"></i> Veg Items
+              </label>
+              <textarea class="form-control" name="girls_lunch_veg" rows="2"
+                        placeholder="e.g. Rice, Dal, Sabzi, Roti, Salad"
+                        style="font-size:0.82rem;">{{ day.girls.lunch_veg if day.girls is defined else '' }}</textarea>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" style="font-size:0.72rem;">
+                <i class="fas fa-drumstick-bite" style="color:var(--danger);"></i> Non-Veg Items
+              </label>
+              <textarea class="form-control" name="girls_lunch_nonveg" rows="2"
+                        placeholder="e.g. Chicken Curry, Rice"
+                        style="font-size:0.82rem;">{{ day.girls.lunch_nonveg if day.girls is defined else '' }}</textarea>
+            </div>
+          </div>
+
+          <!-- Dinner Girls -->
+          <div style="background:var(--light);border-radius:var(--radius-sm);padding:12px;">
+            <div style="font-size:0.78rem;font-weight:600;color:var(--blue);
+                        text-transform:uppercase;margin-bottom:8px;">
+              <i class="fas fa-moon"></i> Dinner
+            </div>
+            <div class="form-group" style="margin-bottom:8px;">
+              <label class="form-label" style="font-size:0.72rem;">
+                <i class="fas fa-leaf" style="color:var(--success);"></i> Veg Items
+              </label>
+              <textarea class="form-control" name="girls_dinner_veg" rows="2"
+                        placeholder="e.g. Chapathi, Paneer, Curd"
+                        style="font-size:0.82rem;">{{ day.girls.dinner_veg if day.girls is defined else '' }}</textarea>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" style="font-size:0.72rem;">
+                <i class="fas fa-drumstick-bite" style="color:var(--danger);"></i> Non-Veg Items
+              </label>
+              <textarea class="form-control" name="girls_dinner_nonveg" rows="2"
+                        placeholder="e.g. Fish Curry, Rice"
+                        style="font-size:0.82rem;">{{ day.girls.dinner_nonveg if day.girls is defined else '' }}</textarea>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /.grid-2 -->
+
+      <div style="display:flex;justify-content:flex-end;">
+        <button type="submit" class="btn btn-navy">
+          <i class="fas fa-save"></i> Save {{ day.label }}'s Menu
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endfor %}
+
+{% endblock %}
