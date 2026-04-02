@@ -1,0 +1,29 @@
+{% extends "base.html" %} {% block title %}Add Student{% endblock %} {% block topbar_title %}Add Student{% endblock %} {% block content %}
+Add Student
+Back to Students
+New Student Registration
+Personal Information
+Full Name * 
+{{ request.form.get('name', '') }}
+USN (University Seat Number) * 
+{{ request.form.get('usn', '') }}
+Programme * 
+Select Programme
+Email 
+{{ request.form.get('email', '') }}
+Contact Information
+Student Phone * 
+{{ request.form.get('phone', '') }}
+Father's Phone 
+{{ request.form.get('father_phone', '') }}
+Mother's Phone 
+{{ request.form.get('mother_phone', '') }}
+Hostel Details
+Assign Room * 
+Select Available Room
+ Room format: B-001 (Boys, Ground Floor, Room 1). 2-sharing rooms.
+Food Preference *
+ Vegetarian  Non-Vegetarian
+Register Student
+Cancel
+{% endblock %}
