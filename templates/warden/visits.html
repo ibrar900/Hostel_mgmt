@@ -1,43 +1,151 @@
-{% extends "base.html" %} {% block title %}Parent Visits{% endblock %} {% block topbar_title %}Parent / Guardian Visits{% endblock %} {% block content %}
-Parent Visits
-Today: {{ today }}
-Log a Visit
-Student * 
-Select Student
-Visitor Name * 
-Full name of visitor
-Relationship 
-Father
-Visit Date 
-dd-mm-yyyy
-Purpose 
-Purpose of visit
-In Time 
---:--
-Out Time 
---:--
-Log Visit
-{{ q }}
-Search
-{% if q %}
-Clear
-{% endif %}
+{% extends "base.html" %}
+{% block title %}Parent Visits{% endblock %}
+{% block topbar_title %}Parent / Guardian Visits{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-users" style="color:var(--accent);margin-right:10px;"></i>Parent Visits</h1>
+  <span class="badge" style="background:#e3f2fd;color:#1565c0;padding:6px 14px;">
+    Today: {{ today }}
+  </span>
+</div>
+
+<!-- Log Visit Form -->
+<div class="card" style="margin-bottom:22px;">
+  <div class="card-header">
+    <h3><i class="fas fa-plus-circle"></i> Log a Visit</h3>
+  </div>
+  <div class="card-body">
+    <form method="POST" action="{{ url_for('warden.add_visit') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}" />
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">Student <span class="required">*</span></label>
+          <select class="form-select" name="student_id" required>
+            <option value="">Select Student</option>
+            {% for s in students %}
+            <option value="{{ s.id }}">{{ s.name }} ({{ s.usn }}) — {{ s.room_number }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Visitor Name <span class="required">*</span></label>
+          <input type="text" class="form-control" name="visitor_name" placeholder="Full name of visitor" required />
+        </div>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group">
+          <label class="form-label">Relationship</label>
+          <select class="form-select" name="relationship">
+            <option value="father">Father</option>
+            <option value="mother">Mother</option>
+            <option value="guardian">Guardian</option>
+            <option value="sibling">Sibling</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Visit Date</label>
+          <input type="date" class="form-control" name="visit_date" value="{{ today }}" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Purpose</label>
+          <input type="text" class="form-control" name="purpose" placeholder="Purpose of visit" />
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">In Time</label>
+          <input type="time" class="form-control" name="in_time" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Out Time</label>
+          <input type="time" class="form-control" name="out_time" />
+        </div>
+      </div>
+      <button type="submit" class="btn btn-accent">
+        <i class="fas fa-save"></i> Log Visit
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Search -->
+<div class="card" style="margin-bottom:22px;">
+  <div class="card-body">
+    <form method="GET" style="display:flex;gap:10px;">
+      <input type="text" class="form-control" name="q" value="{{ q }}" placeholder="Search by student name or USN..." />
+      <button type="submit" class="btn btn-blue">
+        <i class="fas fa-search"></i> Search
+      </button>
+      {% if q %}
+      <a href="{{ url_for('warden.visits') }}" class="btn btn-outline">Clear</a>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+<!-- Search Results -->
 {% if q and search_results %}
-Search Results for "{{ q }}"
-{% include '_visits_table.html' ignore missing with context %}
-{% for v in search_results %} {% endfor %}
-Student	Visitor	Relationship	Date	In	Out	Purpose
-{{ v.student_name }}
-{{ v.usn }}	{{ v.visitor_name }}	{{ v.relationship|title }}	{{ v.visit_date }}	{{ v.in_time or '—' }}	{{ v.out_time or '—' }}	{{ v.purpose or '—' }}
+<div class="card" style="margin-bottom:22px;">
+  <div class="card-header">
+    <h3><i class="fas fa-search"></i> Search Results for "{{ q }}"</h3>
+  </div>
+  <div class="card-body no-pad">
+    {% include '_visits_table.html' ignore missing with context %}
+    <div class="table-responsive">
+      <table>
+        <thead><tr><th>Student</th><th>Visitor</th><th>Relationship</th><th>Date</th><th>In</th><th>Out</th><th>Purpose</th></tr></thead>
+        <tbody>
+          {% for v in search_results %}
+          <tr>
+            <td><strong>{{ v.student_name }}</strong><br/><span class="text-muted text-small">{{ v.usn }}</span></td>
+            <td>{{ v.visitor_name }}</td>
+            <td>{{ v.relationship|title }}</td>
+            <td>{{ v.visit_date }}</td>
+            <td>{{ v.in_time or '—' }}</td>
+            <td>{{ v.out_time or '—' }}</td>
+            <td style="font-size:0.85rem;">{{ v.purpose or '—' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
 {% endif %}
-Today's Visits ({{ today }})
-{{ today_visits|length }}
-{% if today_visits %}
-{% for v in today_visits %} {% endfor %}
-Student	Visitor	Relationship	In	Out	Purpose
-{{ v.student_name }}
-{{ v.usn }} · {{ v.room_number }}	{{ v.visitor_name }}	{{ v.relationship|title }}	{{ v.in_time or '—' }}	{{ v.out_time or '—' }}	{{ v.purpose or '—' }}
-{% else %}
-No visits recorded today.
-{% endif %}
+
+<!-- Today's Visits -->
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-calendar-day"></i> Today's Visits ({{ today }})</h3>
+    <span class="badge" style="background:var(--navy);color:#fff;">{{ today_visits|length }}</span>
+  </div>
+  <div class="card-body no-pad">
+    {% if today_visits %}
+    <div class="table-responsive">
+      <table>
+        <thead><tr><th>Student</th><th>Visitor</th><th>Relationship</th><th>In</th><th>Out</th><th>Purpose</th></tr></thead>
+        <tbody>
+          {% for v in today_visits %}
+          <tr>
+            <td><strong>{{ v.student_name }}</strong><br/><span class="text-muted text-small">{{ v.usn }} · {{ v.room_number }}</span></td>
+            <td>{{ v.visitor_name }}</td>
+            <td>{{ v.relationship|title }}</td>
+            <td>{{ v.in_time or '—' }}</td>
+            <td>{{ v.out_time or '—' }}</td>
+            <td style="font-size:0.85rem;">{{ v.purpose or '—' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div style="padding:28px;text-align:center;color:var(--text-muted);">
+      <i class="fas fa-users" style="font-size:2rem;display:block;margin-bottom:10px;color:#c5cee0;"></i>
+      No visits recorded today.
+    </div>
+    {% endif %}
+  </div>
+</div>
 {% endblock %}
