@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Movement{% endblock %}
+{% block topbar_title %}In / Out Movement{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-door-open" style="color:var(--accent);margin-right:10px;"></i>Movement Log</h1>
+</div>
+
+<!-- Current Status Banner -->
+<div style="margin-bottom:22px;">
+  {% if current_out %}
+  <div style="padding:20px;background:#fff3cd;border:2px solid #ffc107;border-radius:12px;
+              display:flex;align-items:center;gap:16px;">
+    <div style="width:56px;height:56px;border-radius:50%;background:#ffc107;color:#fff;
+                display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;">
+      <i class="fas fa-walking"></i>
+    </div>
+    <div style="flex:1;">
+      <div style="font-size:1.1rem;font-weight:700;color:#856404;">
+        CURRENTLY OUTSIDE since {{ current_out.out_time[11:16] if current_out.out_time|length > 15 else current_out.out_time }}
+      </div>
+      <div style="color:#856404;font-size:0.88rem;margin-top:4px;">
+        Reason: {{ current_out.reason }} &middot; Expected: {{ current_out.expected_return or 'Not specified' }}
+      </div>
+      <div style="margin-top:4px;font-size:0.82rem;color:#856404;">Curfew time: <strong>{{ curfew }}</strong></div>
+    </div>
+    <form method="POST" style="margin:0;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}" />
+      <input type="hidden" name="action" value="in" />
+      <button type="submit" class="btn btn-success">
+        <i class="fas fa-sign-in-alt"></i> Sign In — I'm Back!
+      </button>
+    </form>
+  </div>
+  {% else %}
+  <div style="padding:20px;background:#e8f5e9;border:2px solid #4caf50;border-radius:12px;
+              display:flex;align-items:center;gap:16px;">
+    <div style="width:56px;height:56px;border-radius:50%;background:#4caf50;color:#fff;
+                display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;">
+      <i class="fas fa-home"></i>
+    </div>
+    <div style="flex:1;">
+      <div style="font-size:1.1rem;font-weight:700;color:#1b5e20;">IN HOSTEL</div>
+      <div style="font-size:0.85rem;color:#2e7d32;">You are currently in the hostel. Curfew: <strong>{{ curfew }}</strong></div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Sign Out Form (only if currently in) -->
+{% if not current_out %}
+<div class="card" style="margin-bottom:22px;">
+  <div class="card-header">
+    <h3><i class="fas fa-sign-out-alt"></i> Sign Out</h3>
+  </div>
+  <div class="card-body">
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}" />
+      <input type="hidden" name="action" value="out" />
+      <div class="form-group">
+        <label class="form-label">Reason for going out <span class="required">*</span></label>
+        <input type="text" class="form-control" name="reason"
+               placeholder="e.g. Going to market, visiting friend..." required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Expected Return Time</label>
+        <select class="form-select" name="expected_return">
+          <option value="">Not specified</option>
+          {% if is_girls %}
+          <option value="Back by 7:30 PM">Back by 7:30 PM (curfew)</option>
+          <option value="Back by 6:00 PM">Back by 6:00 PM</option>
+          <option value="Back by 5:00 PM">Back by 5:00 PM</option>
+          {% else %}
+          <option value="Back by 9:30 PM">Back by 9:30 PM (curfew)</option>
+          <option value="Back by 8:00 PM">Back by 8:00 PM</option>
+          <option value="Back by 7:30 PM">Back by 7:30 PM</option>
+          {% endif %}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-danger">
+        <i class="fas fa-sign-out-alt"></i> Sign Out Now
+      </button>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+<!-- Today's Movement History -->
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-history"></i> Today's Movement History</h3>
+  </div>
+  <div class="card-body no-pad">
+    {% if today_logs %}
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr><th>Out Time</th><th>In Time</th><th>Expected Return</th><th>Reason</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          {% for m in today_logs %}
+          <tr>
+            <td>{{ m.out_time[11:16] if m.out_time|length > 15 else m.out_time }}</td>
+            <td>{{ m.in_time[11:16] if m.in_time and m.in_time|length > 15 else (m.in_time or '—') }}</td>
+            <td>{{ m.expected_return or '—' }}</td>
+            <td style="font-size:0.85rem;">{{ m.reason }}</td>
+            <td>
+              {% if m.status == 'returned' %}
+              <span class="badge badge-approved">Returned</span>
+              {% elif m.status == 'overdue' %}
+              <span class="badge badge-rejected">Overdue</span>
+              {% else %}
+              <span class="badge badge-pending">Outside</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div style="padding:28px;text-align:center;color:var(--text-muted);">
+      <i class="fas fa-history" style="font-size:2rem;display:block;margin-bottom:10px;color:#c5cee0;"></i>
+      No movement recorded today.
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
