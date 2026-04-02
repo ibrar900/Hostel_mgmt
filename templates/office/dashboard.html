@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Office Dashboard{% endblock %}
+{% block topbar_title %}Accounts / Office Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-tachometer-alt" style="color:var(--accent);margin-right:10px;"></i>Office Dashboard</h1>
+</div>
+
+<div class="stats-grid" style="margin-bottom:28px;">
+  <div class="stat-card navy">
+    <div class="stat-icon"><i class="fas fa-users"></i></div>
+    <div class="stat-label">Total Students</div>
+    <div class="stat-value">{{ total_students }}</div>
+  </div>
+  <div class="stat-card success">
+    <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+    <div class="stat-label">Fees Collected</div>
+    <div class="stat-value">&#8377;{{ "%.0f"|format(total_collected) }}</div>
+  </div>
+  <div class="stat-card danger">
+    <div class="stat-icon"><i class="fas fa-exclamation-circle"></i></div>
+    <div class="stat-label">Fees Due</div>
+    <div class="stat-value">&#8377;{{ "%.0f"|format(total_dues) }}</div>
+  </div>
+  <div class="stat-card gold">
+    <div class="stat-icon"><i class="fas fa-user-clock"></i></div>
+    <div class="stat-label">Students with Due</div>
+    <div class="stat-value">{{ due_count }}</div>
+  </div>
+  <div class="stat-card accent">
+    <div class="stat-icon"><i class="fas fa-comment-dots"></i></div>
+    <div class="stat-label">Open Complaints</div>
+    <div class="stat-value">{{ open_complaints }}</div>
+  </div>
+</div>
+
+<div class="grid-2" style="gap:24px;">
+  <!-- Quick Actions -->
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+    </div>
+    <div class="card-body">
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <a href="{{ url_for('office.fees') }}" class="btn btn-navy">
+          <i class="fas fa-rupee-sign"></i> View Fees
+        </a>
+        <a href="{{ url_for('office.students') }}" class="btn btn-blue">
+          <i class="fas fa-users"></i> View Students
+        </a>
+        <a href="{{ url_for('office.notifications') }}" class="btn btn-accent">
+          <i class="fas fa-bell"></i> Send Notification
+        </a>
+        <a href="{{ url_for('office.circulars') }}" class="btn btn-outline">
+          <i class="fas fa-bullhorn"></i> Post Circular
+        </a>
+        <a href="{{ url_for('office.reports') }}" class="btn btn-outline">
+          <i class="fas fa-chart-bar"></i> Reports
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Circulars -->
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-bullhorn"></i> Recent Circulars</h3>
+      <a href="{{ url_for('office.circulars') }}" class="btn btn-outline btn-sm">View All</a>
+    </div>
+    <div class="card-body no-pad">
+      {% if recent_circulars %}
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr><th>Title</th><th>By</th><th>Date</th></tr>
+          </thead>
+          <tbody>
+            {% for c in recent_circulars %}
+            <tr>
+              <td>
+                {% if c.is_pinned %}<i class="fas fa-thumbtack" style="color:var(--gold);margin-right:5px;"></i>{% endif %}
+                <strong>{{ c.title }}</strong>
+              </td>
+              <td class="text-small text-muted">{{ c.author }}</td>
+              <td class="text-small text-muted">{{ c.published_at[:10] }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div style="padding:24px;text-align:center;color:var(--text-muted);">No circulars yet.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
