@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+
+{% block title %}Reports{% endblock %}
+{% block topbar_title %}Reports{% endblock %}
+
+{% block head %}
+<style>
+@media print {
+  .no-print { display:none !important; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-chart-bar" style="color:var(--accent);margin-right:10px;"></i>Reports</h1>
+</div>
+
+<!-- Filters -->
+<div class="card no-print" style="margin-bottom:24px;">
+  <div class="card-header">
+    <h3><i class="fas fa-filter"></i> Report Filters</h3>
+  </div>
+  <div class="card-body">
+    <form method="GET" action="{{ url_for('chairman.reports') }}" id="reportForm">
+
+      <div class="form-row-3" style="margin-bottom:14px;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Report Type <span class="required">*</span></label>
+          <select class="form-select" name="type" required onchange="this.form.submit()">
+            <option value="">Select Type</option>
+            <option value="attendance"    {{ 'selected' if rtype == 'attendance'    else '' }}>Attendance</option>
+            <option value="permissions"   {{ 'selected' if rtype == 'permissions'   else '' }}>Permissions</option>
+            <option value="fees"          {{ 'selected' if rtype == 'fees'          else '' }}>Fees Summary</option>
+            <option value="food_complaints" {{ 'selected' if rtype == 'food_complaints' else '' }}>Complaints</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Hostel</label>
+          <select class="form-select" name="hostel">
+            <option value="all" {{ 'selected' if hfilter == 'all' or not hfilter else '' }}>All Hostels</option>
+            <option value="B"   {{ 'selected' if hfilter == 'B' else '' }}>Boys Hostel</option>
+            <option value="G"   {{ 'selected' if hfilter == 'G' else '' }}>Girls Hostel</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">From Date</label>
+          <input type="date" class="form-control" name="from" value="{{ from_d or '' }}" />
+        </div>
+      </div>
+
+      <div class="form-row-3" style="margin-bottom:14px;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">To Date</label>
+          <input type="date" class="form-control" name="to" value="{{ to_d or '' }}" />
+        </div>
+
+        {% if rtype in ('permissions', 'food_complaints') %}
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Status</label>
+          <select class="form-select" name="status">
+            <option value="all"          {{ 'selected' if status_f == 'all'          or not status_f else '' }}>All</option>
+            {% if rtype == 'permissions' %}
+            <option value="pending"      {{ 'selected' if status_f == 'pending'      else '' }}>Pending</option>
+            <option value="approved"     {{ 'selected' if status_f == 'approved'     else '' }}>Approved</option>
+            <option value="rejected"     {{ 'selected' if status_f == 'rejected'     else '' }}>Rejected</option>
+            {% else %}
+            <option value="open"         {{ 'selected' if status_f == 'open'         else '' }}>Open</option>
+            <option value="acknowledged" {{ 'selected' if status_f == 'acknowledged' else '' }}>Acknowledged</option>
+            <option value="resolved"     {{ 'selected' if status_f == 'resolved'     else '' }}>Resolved</option>
+            {% endif %}
+          </select>
+        </div>
+        {% endif %}
+
+        {% if rtype == 'fees' %}
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Fee Status</label>
+          <select class="form-select" name="status">
+            <option value="all"     {{ 'selected' if status_f == 'all'     or not status_f else '' }}>All</option>
+            <option value="due"     {{ 'selected' if status_f == 'due'     else '' }}>Due</option>
+            <option value="paid"    {{ 'selected' if status_f == 'paid'    else '' }}>Paid</option>
+            <option value="partial" {{ 'selected' if status_f == 'partial' else '' }}>Partial</option>
+          </select>
+        </div>
+        {% endif %}
+
+        {% if rtype == 'food_complaints' %}
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Category</label>
+          <select class="form-select" name="category">
+            <option value="all"          {{ 'selected' if cat_filter == 'all' or not cat_filter else '' }}>All</option>
+            <option value="quality"      {{ 'selected' if cat_filter == 'quality'      else '' }}>Food Quality</option>
+            <option value="quantity"     {{ 'selected' if cat_filter == 'quantity'     else '' }}>Food Quantity</option>
+            <option value="hygiene"      {{ 'selected' if cat_filter == 'hygiene'      else '' }}>Hygiene</option>
+            <option value="service"      {{ 'selected' if cat_filter == 'service'      else '' }}>Service</option>
+            <option value="maintenance"  {{ 'selected' if cat_filter == 'maintenance'  else '' }}>Maintenance</option>
+            <option value="fees_payment" {{ 'selected' if cat_filter == 'fees_payment' else '' }}>Fees Payment</option>
+            <option value="other"        {{ 'selected' if cat_filter == 'other'        else '' }}>Other</option>
+          </select>
+        </div>
+        {% endif %}
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <button type="submit" class="btn btn-navy">
+          <i class="fas fa-play"></i> Generate
+        </button>
+        <a href="{{ url_for('chairman.reports') }}" class="btn btn-outline">
+          <i class="fas fa-redo"></i> Reset
+        </a>
+        {% if data %}
+        <a href="{{ url_for('chairman.reports', type=rtype, hostel=hfilter, **({'from':from_d,'to':to_d,'status':status_f,'category':cat_filter})) }}&fmt=csv"
+           class="btn btn-accent btn-sm">
+          <i class="fas fa-download"></i> CSV
+        </a>
+        <button type="button" class="btn btn-outline btn-sm" onclick="window.print()">
+          <i class="fas fa-file-pdf"></i> Print / PDF
+        </button>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Results -->
+{% if data %}
+<div class="card">
+  <div class="card-header">
+    <h3>
+      <i class="fas fa-table"></i>
+      {{ rtype | replace('_',' ') | title }} Report
+      <span style="font-size:0.8rem;font-weight:400;color:var(--text-muted);margin-left:8px;">
+        {% if hfilter and hfilter != 'all' %}{{ 'Boys' if hfilter == 'B' else 'Girls' }} Hostel •{% endif %}
+        {{ from_d }} → {{ to_d }} &nbsp;·&nbsp; {{ data | length }} record(s)
+      </span>
+    </h3>
+  </div>
+  <div class="card-body no-pad">
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            {% if rtype == 'attendance' %}
+              <th>Hostel</th><th>Student</th><th>USN</th><th>Room</th>
+              <th>Present</th><th>Absent</th><th>Leave</th><th>Total</th><th>%</th>
+            {% elif rtype == 'permissions' %}
+              <th>Hostel</th><th>Student</th><th>USN</th><th>Room</th>
+              <th>Type</th><th>From</th><th>To</th><th>Status</th>
+            {% elif rtype == 'fees' %}
+              <th>Hostel</th><th>Student</th><th>USN</th><th>Room</th>
+              <th>Total (₹)</th><th>Paid (₹)</th><th>Due (₹)</th><th>Status</th>
+            {% elif rtype == 'food_complaints' %}
+              <th>Hostel</th><th>Student</th><th>USN</th>
+              <th>Date</th><th>Category</th><th>Description</th><th>Status</th>
+            {% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in data %}
+          <tr>
+            {% if rtype == 'attendance' %}
+              <td>
+                <span class="badge"
+                      style="{{ 'background:rgba(13,27,75,0.1);color:var(--navy);' if row.hostel and 'Boys' in row.hostel else 'background:rgba(106,27,154,0.1);color:#6a1b9a;' }}">
+                  {{ row.hostel or '—' }}
+                </span>
+              </td>
+              <td>{{ row.name }}</td>
+              <td><code>{{ row.usn }}</code></td>
+              <td>{{ row.room_number }}</td>
+              <td style="color:var(--success);font-weight:600;">{{ row.present_days or 0 }}</td>
+              <td style="color:var(--danger);">{{ row.absent_days or 0 }}</td>
+              <td>{{ row.leave_days or 0 }}</td>
+              <td>{{ row.total_days or 0 }}</td>
+              <td>{{ row.pct or 0 }}%</td>
+            {% elif rtype == 'permissions' %}
+              <td>
+                <span class="badge"
+                      style="{{ 'background:rgba(13,27,75,0.1);color:var(--navy);' if row.hostel and 'Boys' in row.hostel else 'background:rgba(106,27,154,0.1);color:#6a1b9a;' }}">
+                  {{ row.hostel or '—' }}
+                </span>
+              </td>
+              <td>{{ row.name }}</td>
+              <td><code>{{ row.usn }}</code></td>
+              <td>{{ row.room_number }}</td>
+              <td>{{ row.permission_type | replace('_',' ') | title }}</td>
+              <td>{{ row.from_date }}</td>
+              <td>{{ row.to_date }}</td>
+              <td><span class="badge badge-{{ row.status }}">{{ row.status | title }}</span></td>
+            {% elif rtype == 'fees' %}
+              <td>
+                <span class="badge"
+                      style="{{ 'background:rgba(13,27,75,0.1);color:var(--navy);' if row.hostel and 'Boys' in row.hostel else 'background:rgba(106,27,154,0.1);color:#6a1b9a;' }}">
+                  {{ row.hostel or '—' }}
+                </span>
+              </td>
+              <td>{{ row.name }}</td>
+              <td><code>{{ row.usn }}</code></td>
+              <td>{{ row.room_number }}</td>
+              <td>{{ "%.0f"|format(row.total_amount) if row.total_amount else '—' }}</td>
+              <td style="color:var(--success);">{{ "%.0f"|format(row.paid_amount) if row.paid_amount else '—' }}</td>
+              <td style="color:{% if row.due_amount and row.due_amount > 0 %}var(--danger){% else %}var(--success){% endif %};font-weight:600;">
+                {{ "%.0f"|format(row.due_amount) if row.due_amount and row.due_amount > 0 else 'Nil' }}
+              </td>
+              <td>
+                {% if not row.total_amount or row.total_amount == 0 %}
+                  <span class="badge" style="background:#e0e0e0;color:#555;">No Record</span>
+                {% elif row.due_amount and row.due_amount > 0 and row.paid_amount and row.paid_amount > 0 %}
+                  <span class="badge badge-pending">Partial</span>
+                {% elif row.due_amount and row.due_amount > 0 %}
+                  <span class="badge badge-rejected">Due</span>
+                {% else %}
+                  <span class="badge badge-approved">Paid</span>
+                {% endif %}
+              </td>
+            {% elif rtype == 'food_complaints' %}
+              <td>
+                <span class="badge"
+                      style="{{ 'background:rgba(13,27,75,0.1);color:var(--navy);' if row.hostel and 'Boys' in row.hostel else 'background:rgba(106,27,154,0.1);color:#6a1b9a;' }}">
+                  {{ row.hostel or '—' }}
+                </span>
+              </td>
+              <td>{{ row.name }}</td>
+              <td><code>{{ row.usn }}</code></td>
+              <td>{{ row.meal_date }}</td>
+              <td><span class="badge badge-pending">{{ row.category | replace('_',' ') | title }}</span></td>
+              <td style="font-size:0.82rem;max-width:200px;">{{ row.description }}</td>
+              <td><span class="badge badge-{{ row.status }}">{{ row.status | title }}</span></td>
+            {% endif %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% elif rtype %}
+<div class="card">
+  <div class="card-body" style="text-align:center;padding:40px;color:var(--text-muted);">
+    <i class="fas fa-inbox" style="font-size:2rem;display:block;margin-bottom:10px;color:#c5cee0;"></i>
+    No data found for the selected filters.
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
