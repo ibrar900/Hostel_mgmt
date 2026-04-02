@@ -1,0 +1,15 @@
+{% extends "base.html" %} {% block title %}Fees Management{% endblock %} {% block topbar_title %}Fees Management{% endblock %} {% block content %}
+Fees Management
+Print
+Total Collected
+₹{{ "%.0f"|format(total_collected) }}
+Total Dues
+₹{{ "%.0f"|format(total_dues) }}
+Add / Update Fee Record
+Toggle Form
+Student Fee Status
+{% for s in students %} {% set due = s.total_amount - s.paid_amount %} {% endfor %}
+Student	Room	Total	Paid	Due	Status	Action
+{{ s.name }}
+{{ s.usn }}	{{ s.room_number }}	{% if s.total_amount > 0 %}₹{{ "%.0f"|format(s.total_amount) }}{% else %}—{% endif %}	{% if s.paid_amount > 0 %}₹{{ "%.0f"|format(s.paid_amount) }}{% else %}—{% endif %}	{% if due > 0 %} ₹{{ "%.0f"|format(due) }} {% else %} Nil {% endif %}	{% if s.total_amount == 0 %} No Record {% elif s.paid_amount >= s.total_amount %} Paid {% elif s.paid_amount > 0 %} Partial {% else %} Due {% endif %}	Update
+{% endblock %} {% block scripts %} {% endblock %}
