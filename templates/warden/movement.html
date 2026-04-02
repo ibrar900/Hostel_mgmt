@@ -1,35 +1,155 @@
-{% extends "base.html" %} {% block title %}Movement Board{% endblock %} {% block topbar_title %}Live Movement Board{% endblock %} {% block content %}
-Movement Board
-Curfew: {{ curfew }}
-In Hostel
-{{ in_hostel|length }}
-Outside
-{{ outside|length }}
-On Leave
-{{ on_leave|length }}
-Currently Outside
-{{ outside|length }}
-{% if outside %}
-{% for m in outside %} {% set out_hm = m.out_time[11:16] if m.out_time|length > 15 else m.out_time %} {% set is_overdue = (is_girls and out_hm > '19:30') or (not is_girls and out_hm > '21:30') %} {% endfor %}
-Student	Room	Out Since	Expected Return	Reason	Action
-{{ m.name }}
-{{ m.usn }}	{{ m.room_number }}	{% if m.out_time|length > 15 %} {{ m.out_time[11:16] }} {% else %} {{ m.out_time }} {% endif %} {% if is_overdue %} OVERDUE {% endif %}	{{ m.expected_return or '—' }}	{{ m.reason }}	
-Mark Returned
-{% else %}
-All students are currently in the hostel.
-{% endif %}
+{% extends "base.html" %}
+{% block title %}Movement Board{% endblock %}
+{% block topbar_title %}Live Movement Board{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-door-open" style="color:var(--accent);margin-right:10px;"></i>Movement Board</h1>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <span class="badge" style="background:#e3f2fd;color:#1565c0;padding:6px 14px;font-size:0.82rem;">
+      <i class="fas fa-clock"></i> Curfew: {{ curfew }}
+    </span>
+  </div>
+</div>
+
+<div class="stats-grid" style="margin-bottom:22px;">
+  <div class="stat-card success">
+    <div class="stat-icon"><i class="fas fa-home"></i></div>
+    <div class="stat-label">In Hostel</div>
+    <div class="stat-value">{{ in_hostel|length }}</div>
+  </div>
+  <div class="stat-card danger">
+    <div class="stat-icon"><i class="fas fa-walking"></i></div>
+    <div class="stat-label">Outside</div>
+    <div class="stat-value">{{ outside|length }}</div>
+  </div>
+  <div class="stat-card gold">
+    <div class="stat-icon"><i class="fas fa-passport"></i></div>
+    <div class="stat-label">On Leave</div>
+    <div class="stat-value">{{ on_leave|length }}</div>
+  </div>
+</div>
+
+<!-- Outside Students -->
+<div class="card" style="margin-bottom:22px;">
+  <div class="card-header">
+    <h3><i class="fas fa-walking" style="color:var(--danger);"></i> Currently Outside</h3>
+    <span class="badge" style="background:var(--danger);color:#fff;">{{ outside|length }}</span>
+  </div>
+  <div class="card-body no-pad">
+    {% if outside %}
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Room</th>
+            <th>Out Since</th>
+            <th>Expected Return</th>
+            <th>Reason</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in outside %}
+          {% set out_hm = m.out_time[11:16] if m.out_time|length > 15 else m.out_time %}
+          {% set is_overdue = (is_girls and out_hm > '19:30') or (not is_girls and out_hm > '21:30') %}
+          <tr {% if is_overdue %}style="background:#fff5f5;"{% endif %}>
+            <td>
+              <strong>{{ m.name }}</strong><br/>
+              <span class="text-muted text-small">{{ m.usn }}</span>
+            </td>
+            <td>{{ m.room_number }}</td>
+            <td>
+              <span {% if is_overdue %}style="color:var(--danger);font-weight:600;"{% endif %}>
+                {% if m.out_time|length > 15 %}
+                  {{ m.out_time[11:16] }}
+                {% else %}
+                  {{ m.out_time }}
+                {% endif %}
+              </span>
+              {% if is_overdue %}
+              <span class="badge badge-rejected" style="margin-left:4px;font-size:0.72rem;">OVERDUE</span>
+              {% endif %}
+            </td>
+            <td>{{ m.expected_return or '—' }}</td>
+            <td style="max-width:180px;font-size:0.85rem;">{{ m.reason }}</td>
+            <td>
+              <form method="POST" action="{{ url_for('warden.movement_return') }}" style="margin:0;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}" />
+                <input type="hidden" name="student_id" value="{{ m.student_id }}" />
+                <button type="submit" class="btn btn-success btn-sm">
+                  <i class="fas fa-sign-in-alt"></i> Mark Returned
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div style="padding:28px;text-align:center;color:var(--text-muted);">
+      <i class="fas fa-home" style="font-size:2rem;margin-bottom:10px;display:block;color:#c5cee0;"></i>
+      All students are currently in the hostel.
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- On Leave -->
 {% if on_leave %}
-On Approved Leave
-{% for s in on_leave %} {% endfor %}
-Student	Room	Leave Period	Reason
-{{ s.name }}
-{{ s.usn }}	{{ s.room_number }}	{{ s.from_date }} → {{ s.to_date }}	{{ s.reason }}
+<div class="card" style="margin-bottom:22px;">
+  <div class="card-header">
+    <h3><i class="fas fa-passport" style="color:var(--gold);"></i> On Approved Leave</h3>
+  </div>
+  <div class="card-body no-pad">
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr><th>Student</th><th>Room</th><th>Leave Period</th><th>Reason</th></tr>
+        </thead>
+        <tbody>
+          {% for s in on_leave %}
+          <tr>
+            <td><strong>{{ s.name }}</strong><br/><span class="text-muted text-small">{{ s.usn }}</span></td>
+            <td>{{ s.room_number }}</td>
+            <td class="text-small">{{ s.from_date }} → {{ s.to_date }}</td>
+            <td style="font-size:0.85rem;">{{ s.reason }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
 {% endif %}
-In Hostel
-{{ in_hostel|length }}
-{% if in_hostel %}
-{% for s in in_hostel %} {% endfor %}
-Student	USN	Room
-{{ s.name }}	{{ s.usn }}	{{ s.room_number }}
-{% endif %}
+
+<!-- In Hostel -->
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-home" style="color:var(--success);"></i> In Hostel</h3>
+    <span class="badge" style="background:var(--success);color:#fff;">{{ in_hostel|length }}</span>
+  </div>
+  <div class="card-body no-pad">
+    {% if in_hostel %}
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr><th>Student</th><th>USN</th><th>Room</th></tr>
+        </thead>
+        <tbody>
+          {% for s in in_hostel %}
+          <tr>
+            <td><strong>{{ s.name }}</strong></td>
+            <td><span class="text-muted text-small">{{ s.usn }}</span></td>
+            <td>{{ s.room_number }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+</div>
 {% endblock %}
