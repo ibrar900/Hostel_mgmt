@@ -1,0 +1,14 @@
+{% block head %}{% endblock %}
+HKBK College Hostel Management
+{% if session.role == 'student' %} Student  Dashboard  Attendance  Permissions  Food & Menu  Complaints  Movement Log  Circulars  Rules & Protocols  My Profile {% elif session.role in ('warden_boys', 'warden_girls') %} {{ 'Boys' if session.role == 'warden_boys' else 'Girls' }} Hostel  Dashboard  Students  Rooms  Attendance  Permissions  Complaints  Menu  Movement Log  Fees  Parent Visits  Circulars  Reports  Full Report  Protocols  My Profile {% elif session.role == 'office' %} Accounts / Office  Dashboard  Students  Fees  Notifications  Circulars  Complaints  Reports  My Profile {% elif session.role == 'vendor' %} Vendor  Dashboard  Menu Management  Complaints {% elif session.role == 'chairman' %} Administration  Dashboard  Students  Permissions  Complaints  Reports  User Management  Circulars  My Profile {% endif %} Account  Change Password
+ No out-pass after 7:30 PM
+ {% block topbar_title %}HKBK Hostel Management System{% endblock %}
+{{ (session.username or 'U')[0:1] | upper }}
+{{ session.name or session.username }} {{ (session.role or '').replace('_', ' ').title() }}
+ Logout
+{% with messages = get_flashed_messages(with_categories=true) %} {% if messages %}
+{% for category, message in messages %}
+ {{ message }} 
+{% endfor %}
+{% endif %} {% endwith %} {% block content %}{% endblock %}
+{% block scripts %}{% endblock %}
