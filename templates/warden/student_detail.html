@@ -1,19 +1,83 @@
-{% extends "base.html" %} {% block title %}Student Detail{% endblock %} {% block topbar_title %}Student Detail{% endblock %} {% block content %}
-{{ student.name }}
-Edit
-Back
-Student Info
-{% for label, val in [ ('USN', student.usn), ('Name', student.name), ('Programme', student.programme), ('Hostel', student.hostel_name), ('Room', student.room_number), ('Floor', student.floor_label), ('Email', student.email or '—'), ('Phone', student.phone or '—'), ('Father Phone', student.father_phone or '—'), ('Mother Phone', student.mother_phone or '—'), ('Food Preference', student.food_preference), ] %} {% endfor %}
-{{ label }}	{{ val }}
-Attendance
-{% set pct = (att.present / att.total * 100)|round(1) if att and att.total else 0 %}
-{{ pct }}%
-{{ att.present if att else 0 }} present / {{ att.total if att else 0 }} days recorded
-Recent Permissions
-{% if perms %} {% for p in perms %} {% endfor %}
-{{ p.permission_type }}	{{ p.from_date }} to {{ p.to_date }}	{{ p.status }}
-{% else %}
-No permissions found.
+{% extends "base.html" %}
+{% block title %}Student Detail{% endblock %}
+{% block topbar_title %}Student Detail{% endblock %}
 
-{% endif %}
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-user" style="color:var(--accent);margin-right:10px;"></i>{{ student.name }}</h1>
+  <div style="display:flex;gap:10px;">
+    <a href="{{ url_for('warden.edit_student', student_id=student.id) }}" class="btn btn-blue">
+      <i class="fas fa-edit"></i> Edit
+    </a>
+    <a href="{{ url_for('warden.students') }}" class="btn btn-outline">
+      <i class="fas fa-arrow-left"></i> Back
+    </a>
+  </div>
+</div>
+
+<div class="grid-2" style="gap:22px;">
+  <div class="card">
+    <div class="card-header"><h3><i class="fas fa-id-card"></i> Student Info</h3></div>
+    <div class="card-body">
+      <table style="width:100%;border-collapse:collapse;">
+        {% for label, val in [
+          ('USN', student.usn),
+          ('Name', student.name),
+          ('Programme', student.programme),
+          ('Hostel', student.hostel_name),
+          ('Room', student.room_number),
+          ('Floor', student.floor_label),
+          ('Email', student.email or '—'),
+          ('Phone', student.phone or '—'),
+          ('Father Phone', student.father_phone or '—'),
+          ('Mother Phone', student.mother_phone or '—'),
+          ('Food Preference', student.food_preference),
+        ] %}
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:8px 12px;color:var(--text-muted);font-size:0.85rem;width:40%;">{{ label }}</td>
+          <td style="padding:8px 12px;font-weight:500;">{{ val }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+
+  <div>
+    <div class="card" style="margin-bottom:18px;">
+      <div class="card-header"><h3><i class="fas fa-chart-bar"></i> Attendance</h3></div>
+      <div class="card-body" style="text-align:center;">
+        {% set pct = (att.present / att.total * 100)|round(1) if att and att.total else 0 %}
+        <div style="font-size:2.5rem;font-weight:700;color:{% if pct >= 75 %}var(--success){% else %}var(--danger){% endif %};">
+          {{ pct }}%
+        </div>
+        <div style="color:var(--text-muted);font-size:0.85rem;">
+          {{ att.present if att else 0 }} present / {{ att.total if att else 0 }} days recorded
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3><i class="fas fa-passport"></i> Recent Permissions</h3></div>
+      <div class="card-body" style="padding:0;">
+        {% if perms %}
+        <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+          {% for p in perms %}
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:8px 12px;">{{ p.permission_type }}</td>
+            <td style="padding:8px 12px;">{{ p.from_date }} to {{ p.to_date }}</td>
+            <td style="padding:8px 12px;">
+              <span class="badge badge-{{ 'approved' if p.status=='approved' else ('rejected' if p.status=='rejected' else 'pending') }}">
+                {{ p.status }}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </table>
+        {% else %}
+        <p style="padding:16px;color:var(--text-muted);text-align:center;">No permissions found.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
