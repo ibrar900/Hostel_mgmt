@@ -1,15 +1,161 @@
-{% extends "base.html" %} {% block title %}Fees Management{% endblock %} {% block topbar_title %}Fees Management{% endblock %} {% block content %}
-Fees Management
-Print
-Total Collected
-₹{{ "%.0f"|format(total_collected) }}
-Total Dues
-₹{{ "%.0f"|format(total_dues) }}
-Add / Update Fee Record
-Toggle Form
-Student Fee Status
-{% for s in students %} {% set due = s.total_amount - s.paid_amount %} {% endfor %}
-Student	Room	Total	Paid	Due	Status	Action
-{{ s.name }}
-{{ s.usn }}	{{ s.room_number }}	{% if s.total_amount > 0 %}₹{{ "%.0f"|format(s.total_amount) }}{% else %}—{% endif %}	{% if s.paid_amount > 0 %}₹{{ "%.0f"|format(s.paid_amount) }}{% else %}—{% endif %}	{% if due > 0 %} ₹{{ "%.0f"|format(due) }} {% else %} Nil {% endif %}	{% if s.total_amount == 0 %} No Record {% elif s.paid_amount >= s.total_amount %} Paid {% elif s.paid_amount > 0 %} Partial {% else %} Due {% endif %}	Update
-{% endblock %} {% block scripts %} {% endblock %}
+{% extends "base.html" %}
+{% block title %}Fees Management{% endblock %}
+{% block topbar_title %}Fees Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-rupee-sign" style="color:var(--accent);margin-right:10px;"></i>Fees Management</h1>
+  <button class="btn btn-outline no-print" onclick="window.print()">
+    <i class="fas fa-print"></i> Print
+  </button>
+</div>
+
+<!-- Summary -->
+<div class="stats-grid" style="margin-bottom:22px;">
+  <div class="stat-card success">
+    <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+    <div class="stat-label">Total Collected</div>
+    <div class="stat-value">&#8377;{{ "%.0f"|format(total_collected) }}</div>
+  </div>
+  <div class="stat-card danger">
+    <div class="stat-icon"><i class="fas fa-exclamation-circle"></i></div>
+    <div class="stat-label">Total Dues</div>
+    <div class="stat-value">&#8377;{{ "%.0f"|format(total_dues) }}</div>
+  </div>
+</div>
+
+<!-- Fee Update Modal Trigger -->
+<div class="card" style="margin-bottom:22px;" id="updateModal" style="display:none;">
+  <div class="card-header">
+    <h3><i class="fas fa-edit"></i> Add / Update Fee Record</h3>
+    <button class="btn btn-outline btn-sm" onclick="document.getElementById('feeForm').style.display=document.getElementById('feeForm').style.display==='none'?'block':'none';">
+      <i class="fas fa-plus"></i> Toggle Form
+    </button>
+  </div>
+  <div id="feeForm" style="display:none;">
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('warden.fees_update') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}" />
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label">Student</label>
+            <select class="form-select" name="student_id" id="feeStudentSelect" required>
+              <option value="">Select Student</option>
+              {% for s in students %}
+              <option value="{{ s.id }}">{{ s.name }} ({{ s.usn }}) — {{ s.room_number }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fee Type</label>
+            <select class="form-select" name="fee_type" required>
+              <option value="hostel">Hostel Fee</option>
+              <option value="mess">Mess Fee</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row-3">
+          <div class="form-group">
+            <label class="form-label">Academic Year</label>
+            <input type="text" class="form-control" name="academic_year" placeholder="e.g. 2025-26" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Total Amount (&#8377;)</label>
+            <input type="number" class="form-control" name="total_amount" step="0.01" min="0" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Paid Amount (&#8377;)</label>
+            <input type="number" class="form-control" name="paid_amount" step="0.01" min="0" value="0" />
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label">Due Date</label>
+            <input type="date" class="form-control" name="due_date" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Notes</label>
+            <input type="text" class="form-control" name="notes" placeholder="Optional notes" />
+          </div>
+        </div>
+        <button type="submit" class="btn btn-accent">
+          <i class="fas fa-save"></i> Save Fee Record
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Student Fee List -->
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-list"></i> Student Fee Status</h3>
+  </div>
+  <div class="card-body no-pad">
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Room</th>
+            <th>Total</th>
+            <th>Paid</th>
+            <th>Due</th>
+            <th>Status</th>
+            <th class="no-print">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in students %}
+          {% set due = s.total_amount - s.paid_amount %}
+          <tr>
+            <td>
+              <strong>{{ s.name }}</strong><br/>
+              <span class="text-muted text-small">{{ s.usn }}</span>
+            </td>
+            <td>{{ s.room_number }}</td>
+            <td>{% if s.total_amount > 0 %}&#8377;{{ "%.0f"|format(s.total_amount) }}{% else %}—{% endif %}</td>
+            <td>{% if s.paid_amount > 0 %}&#8377;{{ "%.0f"|format(s.paid_amount) }}{% else %}—{% endif %}</td>
+            <td>
+              {% if due > 0 %}
+              <strong style="color:var(--danger);">&#8377;{{ "%.0f"|format(due) }}</strong>
+              {% else %}
+              <span style="color:var(--success);">Nil</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if s.total_amount == 0 %}
+                <span class="badge" style="background:#e0e0e0;color:#555;">No Record</span>
+              {% elif s.paid_amount >= s.total_amount %}
+                <span class="badge badge-approved">Paid</span>
+              {% elif s.paid_amount > 0 %}
+                <span class="badge badge-pending">Partial</span>
+              {% else %}
+                <span class="badge badge-rejected">Due</span>
+              {% endif %}
+            </td>
+            <td class="no-print">
+              <button class="btn btn-blue btn-sm"
+                      onclick="openFeeForm({{ s.id }})">
+                <i class="fas fa-edit"></i> Update
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openFeeForm(sid) {
+  document.getElementById('feeForm').style.display = 'block';
+  document.getElementById('feeStudentSelect').value = sid;
+  document.getElementById('feeStudentSelect').scrollIntoView({behavior:'smooth'});
+}
+</script>
+{% endblock %}
