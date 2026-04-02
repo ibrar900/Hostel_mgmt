@@ -1,17 +1,112 @@
-{% if error_code == 404 %}  {% elif error_code == 403 %}  {% elif error_code == 500 %}  {% else %}  {% endif %}
-{{ error_code or '?' }}
-{% if error_code == 404 %} Page Not Found {% elif error_code == 403 %} Access Denied {% elif error_code == 500 %} Internal Server Error {% elif error_code == 401 %} Unauthorized {% else %} Something Went Wrong {% endif %}
-{% if error_message %} {{ error_message }} {% elif error_code == 404 %} The page you are looking for does not exist or may have been moved. {% elif error_code == 403 %} You do not have permission to access this page. Please contact the administrator. {% elif error_code == 500 %} An unexpected error occurred. Please try again later or contact support. {% elif error_code == 401 %} You need to be logged in to access this page. {% else %} An error occurred while processing your request. {% endif %}
- Go Back
-{% if session and session.role %} {% if session.role == 'student' %}
- Go to Dashboard
-{% elif session.role in ('warden_boys', 'warden_girls') %}
- Go to Dashboard
-{% elif session.role == 'vendor' %}
- Go to Dashboard
-{% elif session.role == 'chairman' %}
- Go to Dashboard
-{% endif %} {% else %}
- Login
-{% endif %}
-HKBK College of Engineering — Hostel Management System
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Error {{ error_code or '' }} – HKBK Hostel</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <!-- App CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body style="background:var(--light);">
+
+<div class="error-page">
+  <div class="error-card">
+
+    <!-- Icon -->
+    <div style="font-size:4rem;margin-bottom:16px;color:#dde3f0;">
+      {% if error_code == 404 %}
+        <i class="fas fa-search"></i>
+      {% elif error_code == 403 %}
+        <i class="fas fa-lock"></i>
+      {% elif error_code == 500 %}
+        <i class="fas fa-server"></i>
+      {% else %}
+        <i class="fas fa-exclamation-triangle"></i>
+      {% endif %}
+    </div>
+
+    <!-- Error code -->
+    <div class="error-code">{{ error_code or '?' }}</div>
+
+    <!-- Title -->
+    <div class="error-title">
+      {% if error_code == 404 %}
+        Page Not Found
+      {% elif error_code == 403 %}
+        Access Denied
+      {% elif error_code == 500 %}
+        Internal Server Error
+      {% elif error_code == 401 %}
+        Unauthorized
+      {% else %}
+        Something Went Wrong
+      {% endif %}
+    </div>
+
+    <!-- Message -->
+    <div class="error-msg">
+      {% if error_message %}
+        {{ error_message }}
+      {% elif error_code == 404 %}
+        The page you are looking for does not exist or may have been moved.
+      {% elif error_code == 403 %}
+        You do not have permission to access this page. Please contact the administrator.
+      {% elif error_code == 500 %}
+        An unexpected error occurred. Please try again later or contact support.
+      {% elif error_code == 401 %}
+        You need to be logged in to access this page.
+      {% else %}
+        An error occurred while processing your request.
+      {% endif %}
+    </div>
+
+    <!-- Actions -->
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <a href="javascript:history.back()" class="btn btn-outline">
+        <i class="fas fa-arrow-left"></i> Go Back
+      </a>
+
+      {% if session and session.role %}
+        {% if session.role == 'student' %}
+          <a href="{{ url_for('student.dashboard') }}" class="btn btn-navy">
+            <i class="fas fa-home"></i> Go to Dashboard
+          </a>
+        {% elif session.role in ('warden_boys', 'warden_girls') %}
+          <a href="{{ url_for('warden.dashboard') }}" class="btn btn-navy">
+            <i class="fas fa-home"></i> Go to Dashboard
+          </a>
+        {% elif session.role == 'vendor' %}
+          <a href="{{ url_for('vendor.dashboard') }}" class="btn btn-navy">
+            <i class="fas fa-home"></i> Go to Dashboard
+          </a>
+        {% elif session.role == 'chairman' %}
+          <a href="{{ url_for('chairman.dashboard') }}" class="btn btn-navy">
+            <i class="fas fa-home"></i> Go to Dashboard
+          </a>
+        {% endif %}
+      {% else %}
+        <a href="{{ url_for('auth.login') }}" class="btn btn-navy">
+          <i class="fas fa-sign-in-alt"></i> Login
+        </a>
+      {% endif %}
+    </div>
+
+    <!-- Footer note -->
+    <div style="margin-top:28px;font-size:0.75rem;color:#b0bec5;border-top:1px solid var(--border);padding-top:16px;">
+      HKBK College of Engineering — Hostel Management System
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
