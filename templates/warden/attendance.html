@@ -1,25 +1,180 @@
-{% extends "base.html" %} {% block title %}Attendance{% endblock %} {% block topbar_title %}Mark Attendance{% endblock %} {% block content %}
-Attendance
-{% if already_marked %} Already Marked for {{ selected_date }} {% endif %}
-Attendance Cut-off: No out-pass requests accepted after 7:30 PM. Students on approved permissions are pre-marked as Out of Station.
-Attendance Date
+{% extends "base.html" %}
 
-dd-mm-yyyy
-Upload Biometric CSV
-No file chosen
-Upload
-Mark All As
-All Present
-All Absent
-Student Attendance — {{ selected_date or today }} ({{ students | length if students else 0 }} students)
-Save Attendance
-{% if students %} {% for s in students %} {% set is_oos = s.id in auto_out %} {% endfor %} {% else %} {% endif %}
-#	Name	USN	Room	Status	Note
-{{ loop.index }}	{{ s.name }} {% if is_oos %} On Permission {% endif %}	{{ s.usn }}	{{ s.room_number }}	
- Present  Absent  On Leave  Out of Station
-{{ notes.get(s.id, '') if notes is defined else '' }}
-No students found. Add students first.
-{% if students %}
-Save Attendance for {{ selected_date or today }}
-{% endif %}
+{% block title %}Attendance{% endblock %}
+{% block topbar_title %}Mark Attendance{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-calendar-check" style="color:var(--accent);margin-right:10px;"></i>Attendance</h1>
+  {% if already_marked %}
+    <span class="badge badge-approved" style="font-size:0.82rem;padding:6px 16px;">
+      <i class="fas fa-check-circle"></i> Already Marked for {{ selected_date }}
+    </span>
+  {% endif %}
+</div>
+
+<!-- Cut-off notice -->
+<div class="notice-box warning" style="margin-bottom:20px;">
+  <i class="fas fa-clock"></i>
+  <span>
+    <strong>Attendance Cut-off:</strong> No out-pass requests accepted after <strong>7:30 PM</strong>.
+    Students on approved permissions are pre-marked as Out of Station.
+  </span>
+</div>
+
+<!-- Controls row -->
+<div class="card" style="margin-bottom:22px;">
+  <div class="card-body" style="padding:16px 22px;">
+    <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;">
+
+      <!-- Date picker -->
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">Attendance Date</label>
+        <form method="GET" action="{{ url_for('warden.attendance') }}" id="dateSelectorForm">
+          <div style="display:flex;gap:8px;">
+            <input type="date" class="form-control" name="date"
+                   value="{{ selected_date or today }}" style="width:180px;"
+                   onchange="document.getElementById('dateSelectorForm').submit()" />
+          </div>
+        </form>
+      </div>
+
+      <!-- Upload biometric CSV -->
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">Upload Biometric CSV</label>
+        <form method="POST" action="{{ url_for('warden.upload_biometric') }}"
+              enctype="multipart/form-data" style="display:flex;gap:8px;">
+          <input type="hidden" name="csrf_token"
+                 value="{{ csrf_token() if csrf_token is defined else '' }}" />
+          <input type="hidden" name="date" value="{{ selected_date or today }}" />
+          <input type="file" class="form-control" name="csv_file"
+                 accept=".csv" style="width:240px;" />
+          <button type="submit" class="btn btn-blue">
+            <i class="fas fa-upload"></i> Upload
+          </button>
+        </form>
+      </div>
+
+      <!-- Mark all -->
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">Mark All As</label>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-success btn-sm" data-mark-all="present">All Present</button>
+          <button class="btn btn-danger btn-sm" data-mark-all="absent">All Absent</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Attendance Form -->
+<form method="POST" action="{{ url_for('warden.save_attendance') }}" id="attendanceForm">
+  <input type="hidden" name="csrf_token"
+         value="{{ csrf_token() if csrf_token is defined else '' }}" />
+  <input type="hidden" name="date" value="{{ selected_date or today }}" />
+
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-clipboard-list"></i>
+        Student Attendance — {{ selected_date or today }}
+        <span style="font-size:0.8rem;font-weight:400;color:var(--text-muted);margin-left:6px;">
+          ({{ students | length if students else 0 }} students)
+        </span>
+      </h3>
+      <button type="submit" class="btn btn-navy">
+        <i class="fas fa-save"></i> Save Attendance
+      </button>
+    </div>
+
+    <div class="card-body no-pad">
+      <div class="table-responsive">
+        <table class="attendance-table">
+          <thead>
+            <tr>
+              <th style="width:40px;">#</th>
+              <th>Name</th>
+              <th>USN</th>
+              <th>Room</th>
+              <th>Status</th>
+              <th>Note</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if students %}
+              {% for s in students %}
+              {% set is_oos = s.id in auto_out %}
+              <tr class="{{ 'out-of-station' if is_oos else '' }}">
+                <td class="text-muted text-small">{{ loop.index }}</td>
+                <td>
+                  <strong>{{ s.name }}</strong>
+                  {% if is_oos %}
+                    <span class="badge badge-out-of-station" style="margin-left:6px;font-size:0.68rem;">
+                      <i class="fas fa-plane"></i> On Permission
+                    </span>
+                  {% endif %}
+                </td>
+                <td><code style="font-size:0.8rem;">{{ s.usn }}</code></td>
+                <td style="font-weight:600;">{{ s.room_number }}</td>
+                <td>
+                  <div class="att-radio-group">
+                    <label class="att-radio-label present">
+                      <input type="radio" class="att-status-radio"
+                             name="status_{{ s.id }}" value="present"
+                             {{ 'checked' if attendance.get(s.id) == 'present' or
+                                (not attendance.get(s.id) and not is_oos) else '' }} />
+                      <i class="fas fa-check"></i> Present
+                    </label>
+                    <label class="att-radio-label absent">
+                      <input type="radio" class="att-status-radio"
+                             name="status_{{ s.id }}" value="absent"
+                             {{ 'checked' if attendance.get(s.id) == 'absent' else '' }} />
+                      <i class="fas fa-times"></i> Absent
+                    </label>
+                    <label class="att-radio-label on-leave">
+                      <input type="radio" class="att-status-radio"
+                             name="status_{{ s.id }}" value="on_leave"
+                             {{ 'checked' if attendance.get(s.id) == 'on_leave' else '' }} />
+                      <i class="fas fa-umbrella-beach"></i> On Leave
+                    </label>
+                    <label class="att-radio-label oos">
+                      <input type="radio" class="att-status-radio"
+                             name="status_{{ s.id }}" value="out_of_station"
+                             {{ 'checked' if attendance.get(s.id) == 'out_of_station' or is_oos else '' }} />
+                      <i class="fas fa-plane"></i> Out of Station
+                    </label>
+                  </div>
+                </td>
+                <td>
+                  <input type="text" class="form-control"
+                         name="note_{{ s.id }}"
+                         placeholder="Optional note"
+                         value="{{ notes.get(s.id, '') if notes is defined else '' }}"
+                         style="width:140px;padding:5px 10px;font-size:0.8rem;" />
+                </td>
+              </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted);">
+                  No students found. <a href="{{ url_for('warden.add_student') }}" style="color:var(--accent);">Add students first.</a>
+                </td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    {% if students %}
+    <div style="padding:16px 22px;border-top:1px solid var(--border);
+                display:flex;justify-content:flex-end;gap:12px;">
+      <button type="submit" class="btn btn-navy btn-lg">
+        <i class="fas fa-save"></i> Save Attendance for {{ selected_date or today }}
+      </button>
+    </div>
+    {% endif %}
+  </div>
+
+</form>
 {% endblock %}
