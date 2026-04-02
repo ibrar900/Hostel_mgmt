@@ -1,0 +1,35 @@
+{% extends "base.html" %} {% block title %}Reports{% endblock %} {% block topbar_title %}Reports{% endblock %} {% block head %} {% endblock %} {% block content %}
+Reports
+Report Filters
+Report Type * 
+Select Type
+From Date 
+dd-mm-yyyy
+To Date 
+dd-mm-yyyy
+{% if rtype == 'fees' %}
+Fee Status 
+All
+{% endif %} {% if rtype == 'complaints' %}
+Category 
+All Categories
+Status 
+All
+{% endif %} {% if rtype == 'permissions' %}
+Status 
+All
+{% endif %}
+Generate
+Reset
+{% if data %}
+CSV
+Print / PDF
+{% endif %}
+{% if data %}
+{{ rtype | replace('_',' ') | title }} Report {{ from_d }} → {{ to_d }}  ·  {{ data | length }} record(s)
+{% if rtype == 'attendance' %} {% elif rtype == 'permissions' %} {% elif rtype == 'occupancy' %} {% elif rtype == 'fees' %} {% elif rtype == 'complaints' %} {% endif %} {% for row in data %} {% if rtype == 'attendance' %} {% elif rtype == 'permissions' %} {% elif rtype == 'occupancy' %} {% elif rtype == 'fees' %} {% elif rtype == 'complaints' %} {% endif %} {% endfor %}
+Student	USN	Room	Present	Absent	Leave	OOS	Total	Student	USN	Room	Type	From	To	Status	Reason	Room	Floor	Capacity	Occupied	Students	Student	USN	Room	Total (₹)	Paid (₹)	Due (₹)	Status	Student	USN	Room	Date	Category	Description	Status
+{{ row.name }}	{{ row.usn }}	{{ row.room_number }}	{{ row.present_days or 0 }}	{{ row.absent_days or 0 }}	{{ row.leave_days or 0 }}	{{ row.oos_days or 0 }}	{{ row.total_days or 0 }}	{{ row.name }}	{{ row.usn }}	{{ row.room_number }}	{{ row.permission_type | replace('_',' ') | title }}	{{ row.from_date }}	{{ row.to_date }}	{{ row.status | title }}	{{ row.reason }}	{{ row.room_number }}	{{ row.floor_label }}	{{ row.capacity }}	{{ row.occupied }}	{{ row.students or '—' }}	{{ row.name }}	{{ row.usn }}	{{ row.room_number }}	{{ "%.0f"|format(row.total_amount) if row.total_amount else '—' }}	{{ "%.0f"|format(row.paid_amount) if row.paid_amount else '—' }}	{{ "%.0f"|format(row.due_amount) if row.due_amount and row.due_amount > 0 else 'Nil' }}	{% if not row.total_amount or row.total_amount == 0 %} No Record {% elif row.due_amount and row.due_amount > 0 and row.paid_amount and row.paid_amount > 0 %} Partial {% elif row.due_amount and row.due_amount > 0 %} Due {% else %} Paid {% endif %}	{{ row.name }}	{{ row.usn }}	{{ row.room_number }}	{{ row.meal_date }}	{{ row.category | replace('_',' ') | title }}	{{ row.description }}	{{ row.status | title }}
+{% elif rtype %}
+No data found for the selected filters.
+{% endif %} {% endblock %}
