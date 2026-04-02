@@ -1,0 +1,43 @@
+{% extends "base.html" %} {% block title %}Menu{% endblock %} {% block topbar_title %}Today's Menu{% endblock %} {% block content %}
+Food Menu
+View menu for:
+
+dd-mm-yyyy
+{{ selected_date or today }}
+{% if menu %}
+Breakfast {{ menu.breakfast_time or '7:30 – 9:00 AM' }}
+{% if menu.breakfast_veg %}
+Veg
+{{ menu.breakfast_veg }}
+{% endif %} {% if menu.breakfast_nonveg %}
+Non-Veg
+{{ menu.breakfast_nonveg }}
+{% endif %} {% if not menu.breakfast_veg and not menu.breakfast_nonveg %}
+No menu set.
+
+{% endif %}
+Lunch {{ menu.lunch_time or '12:00 – 2:00 PM' }}
+{% if menu.lunch_veg %}
+Veg
+{{ menu.lunch_veg }}
+{% endif %} {% if menu.lunch_nonveg %}
+Non-Veg
+{{ menu.lunch_nonveg }}
+{% endif %} {% if not menu.lunch_veg and not menu.lunch_nonveg %}
+No menu set.
+
+{% endif %}
+Dinner {{ menu.dinner_time or '7:00 – 9:00 PM' }}
+{% if menu.dinner_veg %}
+Veg
+{{ menu.dinner_veg }}
+{% endif %} {% if menu.dinner_nonveg %}
+Non-Veg
+{{ menu.dinner_nonveg }}
+{% endif %} {% if not menu.dinner_veg and not menu.dinner_nonveg %}
+No menu set.
+
+{% endif %}
+{% else %}
+No menu has been set for {{ selected_date or today }} by the vendor yet.
+{% endif %} {% endblock %}
