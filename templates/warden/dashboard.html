@@ -1,60 +1,284 @@
-{% extends "base.html" %} {% block title %}Warden Dashboard{% endblock %} {% block topbar_title %} {{ hostel_name or ('Boys Hostel' if session.role == 'warden_boys' else 'Girls Hostel') }} {% endblock %} {% block content %}
-{{ hostel_name or ('Boys Hostel' if session.role == 'warden_boys' else 'Girls Hostel') }}
-{{ today or 'Today' }}
-{% if attendance_done %} Attendance Marked Today {% else %} Attendance Not Marked Yet {% endif %}
-Total Students
-{{ total_students or 0 }}
-Enrolled in hostel
-Present Today
-{{ present_today or 0 }}
-{{ present_pct or '—' }}% attendance
-Absent
-{{ absent_today or 0 }}
-Includes on-leave
-Pending Permissions
-{{ pending_permissions or 0 }}
-Awaiting approval
-Open Complaints
-{{ open_complaints or 0 }}
-Unresolved food complaints
-Rooms Occupied
-{{ rooms_occupied or 0 }}
-of {{ total_rooms or 0 }} total rooms
-Mark Attendance Add Student View Rooms Reports
-Pending Permissions
-View All
-{% if recent_permissions %}
-{% for p in recent_permissions %} {% endfor %}
-Student	Type	Dates	Actions
-{{ p.student_name }}
-{{ p.usn }}	{{ p.type | title }}	{{ p.from_date }} → {{ p.to_date }}	
-Approve Reject
-{% else %}
-No pending permissions
-{% endif %}
-Recent Complaints
-View All
-{% if recent_complaints %}
-{% for c in recent_complaints %} {% endfor %}
-Student	Date	Category	Status
-{{ c.student_name }}
-{{ c.meal_type | title }}	{{ c.date }}	{{ c.category | title }}	{{ c.status | title }}
-{% else %}
-No recent complaints
-{% endif %}
-Approve Permission
+{% extends "base.html" %}
 
-Approving permission for:
+{% block title %}Warden Dashboard{% endblock %}
+{% block topbar_title %}
+  {{ hostel_name or ('Boys Hostel' if session.role == 'warden_boys' else 'Girls Hostel') }}
+{% endblock %}
 
-Food will be automatically paused for the student during their absence.
-Note / Remarks (optional) 
-Add any remarks for this approval...
-Cancel Confirm Approval
-Reject Permission
+{% block content %}
 
-Rejecting permission for:
+<!-- Page Header -->
+<div class="page-header">
+  <div>
+    <h1>
+      <i class="fas fa-tachometer-alt" style="color:var(--accent);margin-right:10px;"></i>
+      {{ hostel_name or ('Boys Hostel' if session.role == 'warden_boys' else 'Girls Hostel') }}
+    </h1>
+    <div class="breadcrumb" style="margin-top:4px;">
+      <i class="fas fa-calendar-alt"></i>
+      <span>{{ today or 'Today' }}</span>
+    </div>
+  </div>
 
-Reason for Rejection * 
-State the reason for rejection...
-Cancel Confirm Rejection
+  <!-- Attendance Status Badge -->
+  {% if attendance_done %}
+    <span class="badge badge-approved" style="font-size:0.82rem;padding:6px 16px;">
+      <i class="fas fa-check-circle"></i> Attendance Marked Today
+    </span>
+  {% else %}
+    <span class="badge badge-pending" style="font-size:0.82rem;padding:6px 16px;">
+      <i class="fas fa-exclamation-circle"></i> Attendance Not Marked Yet
+    </span>
+  {% endif %}
+</div>
+
+<!-- Stat Cards -->
+<div class="stats-grid">
+  <div class="stat-card navy">
+    <div class="stat-icon"><i class="fas fa-users"></i></div>
+    <div class="stat-label">Total Students</div>
+    <div class="stat-value">{{ total_students or 0 }}</div>
+    <div class="stat-sub">Enrolled in hostel</div>
+  </div>
+
+  <div class="stat-card accent">
+    <div class="stat-icon"><i class="fas fa-user-check"></i></div>
+    <div class="stat-label">Present Today</div>
+    <div class="stat-value">{{ present_today or 0 }}</div>
+    <div class="stat-sub">
+      {{ present_pct or '—' }}% attendance
+    </div>
+  </div>
+
+  <div class="stat-card danger">
+    <div class="stat-icon"><i class="fas fa-user-times"></i></div>
+    <div class="stat-label">Absent</div>
+    <div class="stat-value">{{ absent_today or 0 }}</div>
+    <div class="stat-sub">Includes on-leave</div>
+  </div>
+
+  <div class="stat-card gold">
+    <div class="stat-icon"><i class="fas fa-passport"></i></div>
+    <div class="stat-label">Pending Permissions</div>
+    <div class="stat-value">{{ pending_permissions or 0 }}</div>
+    <div class="stat-sub">Awaiting approval</div>
+  </div>
+
+  <div class="stat-card blue">
+    <div class="stat-icon"><i class="fas fa-comment-dots"></i></div>
+    <div class="stat-label">Open Complaints</div>
+    <div class="stat-value">{{ open_complaints or 0 }}</div>
+    <div class="stat-sub">Unresolved food complaints</div>
+  </div>
+
+  <div class="stat-card success">
+    <div class="stat-icon" style="background:rgba(67,160,71,0.1);color:var(--success);">
+      <i class="fas fa-door-open"></i>
+    </div>
+    <div class="stat-label">Rooms Occupied</div>
+    <div class="stat-value">{{ rooms_occupied or 0 }}</div>
+    <div class="stat-sub">of {{ total_rooms or 0 }} total rooms</div>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="quick-actions">
+  <a href="{{ url_for('warden.attendance') }}" class="btn btn-navy">
+    <i class="fas fa-calendar-check"></i> Mark Attendance
+  </a>
+  <a href="{{ url_for('warden.add_student') }}" class="btn btn-accent">
+    <i class="fas fa-user-plus"></i> Add Student
+  </a>
+  <a href="{{ url_for('warden.rooms') }}" class="btn btn-blue">
+    <i class="fas fa-door-open"></i> View Rooms
+  </a>
+  <a href="{{ url_for('warden.reports') }}" class="btn btn-outline">
+    <i class="fas fa-chart-bar"></i> Reports
+  </a>
+</div>
+
+<!-- Bottom two-column layout -->
+<div class="grid-2" style="gap:22px;">
+
+  <!-- Recent Permissions -->
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-passport"></i> Pending Permissions</h3>
+      <a href="{{ url_for('warden.permissions') }}" class="btn btn-outline btn-sm">
+        View All <i class="fas fa-arrow-right"></i>
+      </a>
+    </div>
+    <div class="card-body no-pad">
+      {% if recent_permissions %}
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Type</th>
+                <th>Dates</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in recent_permissions %}
+              <tr>
+                <td>
+                  <strong>{{ p.student_name }}</strong><br/>
+                  <span class="text-muted text-small">{{ p.usn }}</span>
+                </td>
+                <td>
+                  <span class="badge badge-pending">{{ p.type | title }}</span>
+                </td>
+                <td class="text-small text-muted">
+                  {{ p.from_date }} → {{ p.to_date }}
+                </td>
+                <td>
+                  <div class="table-actions">
+                    <!-- Approve -->
+                    <button class="btn btn-success btn-sm"
+                            data-approve-id="{{ p.id }}"
+                            data-student-name="{{ p.student_name }}">
+                      <i class="fas fa-check"></i> Approve
+                    </button>
+                    <!-- Reject -->
+                    <button class="btn btn-danger btn-sm"
+                            data-reject-id="{{ p.id }}"
+                            data-student-name="{{ p.student_name }}">
+                      <i class="fas fa-times"></i> Reject
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div style="padding:28px;text-align:center;color:var(--text-muted);">
+          <i class="fas fa-check-double" style="font-size:2rem;margin-bottom:10px;display:block;color:#c5cee0;"></i>
+          No pending permissions
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Recent Food Complaints -->
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-comment-dots"></i> Recent Complaints</h3>
+      <a href="{{ url_for('warden.complaints') }}" class="btn btn-outline btn-sm">
+        View All <i class="fas fa-arrow-right"></i>
+      </a>
+    </div>
+    <div class="card-body no-pad">
+      {% if recent_complaints %}
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Date</th>
+                <th>Category</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for c in recent_complaints %}
+              <tr>
+                <td>
+                  <strong>{{ c.student_name }}</strong><br/>
+                  <span class="text-muted text-small">{{ c.meal_type | title }}</span>
+                </td>
+                <td class="text-small text-muted">{{ c.date }}</td>
+                <td>{{ c.category | title }}</td>
+                <td>
+                  <span class="badge badge-{{ c.status }}">{{ c.status | title }}</span>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div style="padding:28px;text-align:center;color:var(--text-muted);">
+          <i class="fas fa-smile" style="font-size:2rem;margin-bottom:10px;display:block;color:#c5cee0;"></i>
+          No recent complaints
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div><!-- /.grid-2 -->
+
+<!-- Approve Modal -->
+<div class="modal-backdrop" id="approveModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3><i class="fas fa-check-circle" style="color:var(--success);"></i> Approve Permission</h3>
+      <button class="modal-close" data-modal-close>
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <form method="POST" action="{{ url_for('warden.approve_permission') }}">
+      <input type="hidden" name="csrf_token"
+             value="{{ csrf_token() if csrf_token is defined else '' }}" />
+      <input type="hidden" name="permission_id" value="" />
+      <div class="modal-body">
+        <p style="margin-bottom:14px;color:var(--text-muted);font-size:0.875rem;">
+          Approving permission for: <strong class="modal-student-name" style="color:var(--navy);"></strong>
+        </p>
+        <div class="notice-box info">
+          <i class="fas fa-info-circle"></i>
+          <span>Food will be automatically paused for the student during their absence.</span>
+        </div>
+        <div class="form-group" style="margin-top:14px;">
+          <label class="form-label">Note / Remarks (optional)</label>
+          <textarea class="form-control" name="note" rows="3"
+                    placeholder="Add any remarks for this approval..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+        <button type="submit" class="btn btn-success">
+          <i class="fas fa-check"></i> Confirm Approval
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal-backdrop" id="rejectModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3><i class="fas fa-times-circle" style="color:var(--danger);"></i> Reject Permission</h3>
+      <button class="modal-close" data-modal-close>
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <form method="POST" action="{{ url_for('warden.reject_permission') }}">
+      <input type="hidden" name="csrf_token"
+             value="{{ csrf_token() if csrf_token is defined else '' }}" />
+      <input type="hidden" name="permission_id" value="" />
+      <div class="modal-body">
+        <p style="margin-bottom:14px;color:var(--text-muted);font-size:0.875rem;">
+          Rejecting permission for: <strong class="modal-student-name" style="color:var(--navy);"></strong>
+        </p>
+        <div class="form-group">
+          <label class="form-label">Reason for Rejection <span class="required">*</span></label>
+          <textarea class="form-control" name="reason" rows="3" required
+                    placeholder="State the reason for rejection..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+        <button type="submit" class="btn btn-danger">
+          <i class="fas fa-times"></i> Confirm Rejection
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
 {% endblock %}
