@@ -1,0 +1,30 @@
+{% extends "base.html" %} {% block title %}Circulars{% endblock %} {% block topbar_title %}Circulars{% endblock %} {% block content %}
+Circulars
+Publish New Circular
+Title * 
+Circular title
+Content * 
+Write the circular content here...
+Target Audience 
+All
+
+Pin this circular
+Publish Circular
+All Circulars
+{% if circulars %} {% for c in circulars %}
+{% if c.is_pinned and c.is_active %}
+{% endif %}
+{{ c.title }}
+{{ c.target|title }}
+{% if not c.is_active %}
+Inactive
+{% endif %}
+{{ c.content }}
+By {{ c.author }} · {{ c.published_at[:16] if c.published_at else '' }}
+{% if c.is_active %}
+
+{% endif %}
+{% endfor %} {% else %}
+No circulars published yet.
+{% endif %}
+{% endblock %}
