@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Complaints{% endblock %}
+{% block topbar_title %}Food Complaints{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-comment-dots" style="color:var(--accent);margin-right:10px;"></i>Food Complaints</h1>
+</div>
+
+<!-- Filter Tabs -->
+<div class="tab-nav">
+  <button onclick="window.location='{{ url_for('vendor.complaints', status='open') }}'"
+          class="{{ 'active' if status_filter == 'open' or not status_filter else '' }}">
+    <i class="fas fa-exclamation-circle"></i> Open
+    {% if open_count %}
+      <span class="badge badge-open" style="margin-left:5px;">{{ open_count }}</span>
+    {% endif %}
+  </button>
+  <button onclick="window.location='{{ url_for('vendor.complaints', status='acknowledged') }}'"
+          class="{{ 'active' if status_filter == 'acknowledged' else '' }}">
+    <i class="fas fa-eye"></i> Acknowledged
+  </button>
+  <button onclick="window.location='{{ url_for('vendor.complaints', status='resolved') }}'"
+          class="{{ 'active' if status_filter == 'resolved' else '' }}">
+    <i class="fas fa-check-circle"></i> Resolved
+  </button>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3>
+      <i class="fas fa-list"></i>
+      {{ (status_filter or 'All') | title }} Complaints
+      <span style="font-size:0.8rem;font-weight:400;color:var(--text-muted);margin-left:6px;">
+        ({{ complaints | length if complaints else 0 }})
+      </span>
+    </h3>
+    <div class="search-bar">
+      <i class="fas fa-search"></i>
+      <input type="text" placeholder="Search..." data-search-table="vendorComplaintsTable" />
+    </div>
+  </div>
+
+  <div class="card-body no-pad">
+    <div class="table-responsive">
+      <table id="vendorComplaintsTable">
+        <thead>
+          <tr>
+            <th>Hostel</th>
+            <th>Student</th>
+            <th>Date</th>
+            <th>Meal</th>
+            <th>Category</th>
+            <th>Description</th>
+            <th>Warden Note</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if complaints %}
+            {% for c in complaints %}
+            <tr>
+              <td>
+                <span class="badge"
+                      style="{{ 'background:rgba(13,27,75,0.1);color:var(--navy);' if c.hostel_type == 'boys'
+                                else 'background:rgba(106,27,154,0.1);color:#6a1b9a;' }}">
+                  <i class="fas fa-{{ 'male' if c.hostel_type == 'boys' else 'female' }}"></i>
+                  {{ 'Boys' if c.hostel_type == 'boys' else 'Girls' }}
+                </span>
+              </td>
+              <td>
+                <strong>{{ c.student_name }}</strong><br/>
+                <span class="text-muted text-small">Room {{ c.room_number }}</span>
+              </td>
+              <td class="text-small text-muted">{{ c.date }}</td>
+              <td class="text-small">{{ c.meal_type | title }}</td>
+              <td>
+                <span class="badge badge-pending">{{ c.category | title }}</span>
+              </td>
+              <td style="max-width:200px;font-size:0.82rem;">{{ c.description }}</td>
+              <td style="max-width:160px;font-size:0.82rem;color:var(--text-muted);font-style:italic;">
+                {{ c.warden_note or '—' }}
+              </td>
+              <td>
+                <span class="badge badge-{{ c.status }}">{{ c.status | title }}</span>
+              </td>
+              <td>
+                <button class="btn btn-outline btn-sm" data-toggle-response="{{ c.id }}">
+                  <i class="fas fa-reply"></i> Respond
+                </button>
+                <!-- Inline response form -->
+                <div id="resp-{{ c.id }}" style="display:none;margin-top:8px;min-width:220px;">
+                  <form method="POST" action="{{ url_for('vendor.respond_complaint', complaint_id=c.id) }}">
+                    <input type="hidden" name="csrf_token"
+                           value="{{ csrf_token() if csrf_token is defined else '' }}" />
+                    <textarea class="form-control" name="response" rows="2"
+                              placeholder="Your response to this complaint..."
+                              style="font-size:0.8rem;margin-bottom:6px;">{{ c.vendor_response or '' }}</textarea>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                      <select class="form-select" name="status"
+                              style="font-size:0.8rem;padding:5px 10px;width:auto;">
+                        <option value="acknowledged" {{ 'selected' if c.status == 'acknowledged' else '' }}>
+                          Acknowledged
+                        </option>
+                        <option value="resolved" {{ 'selected' if c.status == 'resolved' else '' }}>
+                          Resolved
+                        </option>
+                        <option value="open" {{ 'selected' if c.status == 'open' else '' }}>
+                          Open
+                        </option>
+                      </select>
+                      <button type="submit" class="btn btn-navy btn-sm">
+                        <i class="fas fa-save"></i> Save
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="9" style="text-align:center;padding:32px;color:var(--text-muted);">
+                <i class="fas fa-smile" style="font-size:2rem;margin-bottom:10px;display:block;color:#c5cee0;"></i>
+                No {{ status_filter or '' }} complaints found.
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
