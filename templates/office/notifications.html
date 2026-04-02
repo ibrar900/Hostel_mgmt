@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Notifications{% endblock %}
+{% block topbar_title %}Push Notifications{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-bell" style="color:var(--accent);margin-right:10px;"></i>Push Notifications</h1>
+</div>
+
+<div class="grid-2" style="gap:24px;align-items:flex-start;">
+
+  <!-- Send Notification Form -->
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-paper-plane"></i> Send Notification</h3>
+    </div>
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('office.notifications') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}" />
+
+        <div class="form-group">
+          <label class="form-label">Title <span class="required">*</span></label>
+          <input type="text" class="form-control" name="title" placeholder="Notification title" required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Message <span class="required">*</span></label>
+          <textarea class="form-control" name="body" rows="4" required
+                    placeholder="Type your notification message here..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Send To</label>
+          <select class="form-select" name="target">
+            <option value="all">All Users</option>
+            {% for s in students %}
+            <option value="{{ s.user_id }}">{{ s.name }} ({{ s.usn }})</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-navy">
+          <i class="fas fa-paper-plane"></i> Send Notification
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Recent Notifications -->
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-history"></i> Recent Notifications</h3>
+    </div>
+    <div class="card-body no-pad">
+      {% if recent %}
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Sent To</th>
+              <th>Date</th>
+              <th>Read</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for n in recent %}
+            <tr>
+              <td><strong>{{ n.title }}</strong><br/><span class="text-muted text-small">{{ n.body[:60] }}{% if n.body|length > 60 %}…{% endif %}</span></td>
+              <td class="text-small">{{ n.full_name or n.username }}</td>
+              <td class="text-small text-muted">{{ n.created_at[:16] }}</td>
+              <td>
+                <span class="badge {{ 'badge-approved' if n.is_read else 'badge-rejected' }}">
+                  {{ 'Read' if n.is_read else 'Unread' }}
+                </span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div style="padding:24px;text-align:center;color:var(--text-muted);">No notifications sent yet.</div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}
