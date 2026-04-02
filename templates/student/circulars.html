@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Circulars{% endblock %}
+{% block topbar_title %}Circulars{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-bullhorn" style="color:var(--accent);margin-right:10px;"></i>Circulars &amp; Notices</h1>
+</div>
+
+{% if circulars %}
+{% for c in circulars %}
+<div class="card" style="margin-bottom:16px;{% if c.is_pinned %}border-left:4px solid var(--gold);{% endif %}">
+  <div class="card-body">
+    <div style="display:flex;align-items:flex-start;gap:12px;">
+      {% if c.is_pinned %}
+      <div style="width:40px;height:40px;border-radius:8px;background:#fff9c4;color:var(--gold);
+                  display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.1rem;">
+        <i class="fas fa-thumbtack"></i>
+      </div>
+      {% else %}
+      <div style="width:40px;height:40px;border-radius:8px;background:#e3f2fd;color:var(--navy);
+                  display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.1rem;">
+        <i class="fas fa-bullhorn"></i>
+      </div>
+      {% endif %}
+      <div style="flex:1;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
+          <strong style="font-size:0.97rem;">{{ c.title }}</strong>
+          {% if c.is_pinned %}
+          <span class="badge" style="background:#fff9c4;color:#856404;font-size:0.72rem;">Pinned</span>
+          {% endif %}
+          <span class="badge" style="background:#e3f2fd;color:#1565c0;font-size:0.72rem;">{{ c.target|title }}</span>
+        </div>
+        <div style="font-size:0.88rem;color:var(--text-secondary);white-space:pre-wrap;line-height:1.6;">{{ c.content }}</div>
+        <div style="margin-top:8px;font-size:0.78rem;color:var(--text-muted);">
+          <i class="fas fa-user"></i> {{ c.author }} &nbsp;&middot;&nbsp;
+          <i class="fas fa-clock"></i> {{ c.published_at[:16] if c.published_at else '' }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% else %}
+<div class="card">
+  <div class="card-body" style="text-align:center;padding:40px;color:var(--text-muted);">
+    <i class="fas fa-bullhorn" style="font-size:2.5rem;display:block;margin-bottom:12px;color:#c5cee0;"></i>
+    No circulars at the moment.
+  </div>
+</div>
+{% endif %}
+{% endblock %}
