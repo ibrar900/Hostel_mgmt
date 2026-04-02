@@ -1,19 +1,58 @@
-{% extends "base.html" %} {% block title %}Edit Student{% endblock %} {% block topbar_title %}Edit Student{% endblock %} {% block content %}
-Edit Student
-Back
-{{ student.usn }} — {{ student.name }}
-Full Name * 
-{{ student.name }}
-Email 
-{{ student.email or '' }}
-Phone 
-{{ student.phone or '' }}
-Father's Phone 
-{{ student.father_phone or '' }}
-Mother's Phone 
-{{ student.mother_phone or '' }}
-Food Preference 
-Vegetarian
-Save Changes
-Cancel
+{% extends "base.html" %}
+{% block title %}Edit Student{% endblock %}
+{% block topbar_title %}Edit Student{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-user-edit" style="color:var(--accent);margin-right:10px;"></i>Edit Student</h1>
+  <a href="{{ url_for('warden.students') }}" class="btn btn-outline">
+    <i class="fas fa-arrow-left"></i> Back
+  </a>
+</div>
+
+<div class="card" style="max-width:640px;">
+  <div class="card-header">
+    <h3><i class="fas fa-edit"></i> {{ student.usn }} — {{ student.name }}</h3>
+  </div>
+  <div class="card-body">
+    <form method="POST" action="{{ url_for('warden.edit_student', student_id=student.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}" />
+
+      <div class="form-group">
+        <label class="form-label">Full Name <span style="color:var(--danger);">*</span></label>
+        <input type="text" class="form-control" name="name" value="{{ student.name }}" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-control" name="email" value="{{ student.email or '' }}" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone</label>
+        <input type="text" class="form-control" name="phone" value="{{ student.phone or '' }}" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Father's Phone</label>
+        <input type="text" class="form-control" name="father_phone" value="{{ student.father_phone or '' }}" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mother's Phone</label>
+        <input type="text" class="form-control" name="mother_phone" value="{{ student.mother_phone or '' }}" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Food Preference</label>
+        <select class="form-select" name="food_preference">
+          <option value="veg" {{ 'selected' if student.food_preference=='veg' }}>Vegetarian</option>
+          <option value="non-veg" {{ 'selected' if student.food_preference=='non-veg' }}>Non-Vegetarian</option>
+        </select>
+      </div>
+
+      <div style="display:flex;gap:12px;margin-top:20px;">
+        <button type="submit" class="btn btn-accent">
+          <i class="fas fa-save"></i> Save Changes
+        </button>
+        <a href="{{ url_for('warden.students') }}" class="btn btn-outline">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
 {% endblock %}
