@@ -1,0 +1,15 @@
+{% extends "base.html" %} {% block title %}Rooms{% endblock %} {% block topbar_title %}Room Occupancy{% endblock %} {% block content %}
+Room Occupancy
+Full
+Partial
+Empty
+Total Rooms
+{{ total_rooms or 0 }}
+Full
+{{ full_rooms or 0 }}
+Partial
+{{ partial_rooms or 0 }}
+Empty
+{{ empty_rooms or 0 }}
+{% set floors = [ ('ground', 'Ground Floor'), ('1st', '1st Floor'), ('2nd', '2nd Floor'), ('3rd', '3rd Floor'), ('4th', '4th Floor'), ('5th', '5th Floor'), ] %} {% for key, label in floors %} {{ label }} {% endfor %}
+{% for key, label in [ ('ground', 'Ground Floor'), ('1st', '1st Floor'), ('2nd', '2nd Floor'), ('3rd', '3rd Floor'), ('4th', '4th Floor'), ('5th', '5th Floor'), ] %} {% endfor %} {% endblock %}
