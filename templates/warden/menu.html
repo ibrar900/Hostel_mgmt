@@ -1,43 +1,132 @@
-{% extends "base.html" %} {% block title %}Menu{% endblock %} {% block topbar_title %}Today's Menu{% endblock %} {% block content %}
-Food Menu
-View menu for:
+{% extends "base.html" %}
 
-dd-mm-yyyy
-{{ selected_date or today }}
+{% block title %}Menu{% endblock %}
+{% block topbar_title %}Today's Menu{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-utensils" style="color:var(--accent);margin-right:10px;"></i>Food Menu</h1>
+</div>
+
+<!-- Date picker -->
+<div class="card" style="margin-bottom:22px;">
+  <div class="card-body" style="padding:14px 22px;">
+    <form method="GET" action="{{ url_for('warden.menu') }}" id="menuDateForm"
+          style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <label class="form-label" style="margin:0;white-space:nowrap;">View menu for:</label>
+      <input type="date" class="form-control" name="date"
+             value="{{ selected_date or today }}" style="width:180px;"
+             onchange="document.getElementById('menuDateForm').submit()" />
+      <span style="font-size:0.85rem;color:var(--text-muted);">
+        {{ selected_date or today }}
+      </span>
+    </form>
+  </div>
+</div>
+
+<!-- Menu Cards -->
 {% if menu %}
-Breakfast {{ menu.breakfast_time or '7:30 – 9:00 AM' }}
-{% if menu.breakfast_veg %}
-Veg
-{{ menu.breakfast_veg }}
-{% endif %} {% if menu.breakfast_nonveg %}
-Non-Veg
-{{ menu.breakfast_nonveg }}
-{% endif %} {% if not menu.breakfast_veg and not menu.breakfast_nonveg %}
-No menu set.
+<div class="menu-grid">
 
-{% endif %}
-Lunch {{ menu.lunch_time or '12:00 – 2:00 PM' }}
-{% if menu.lunch_veg %}
-Veg
-{{ menu.lunch_veg }}
-{% endif %} {% if menu.lunch_nonveg %}
-Non-Veg
-{{ menu.lunch_nonveg }}
-{% endif %} {% if not menu.lunch_veg and not menu.lunch_nonveg %}
-No menu set.
+  <!-- Breakfast -->
+  <div class="menu-card">
+    <div class="menu-card-header breakfast">
+      <i class="fas fa-sun"></i> Breakfast
+      <span style="font-size:0.75rem;font-weight:400;margin-left:auto;">
+        {{ menu.breakfast_time or '7:30 – 9:00 AM' }}
+      </span>
+    </div>
+    <div class="menu-card-body">
+      {% if menu.breakfast_veg %}
+      <div class="menu-item-section">
+        <div class="menu-item-type">
+          <i class="fas fa-leaf" style="color:var(--success);margin-right:3px;"></i> Veg
+        </div>
+        <div class="menu-items">{{ menu.breakfast_veg }}</div>
+      </div>
+      {% endif %}
+      {% if menu.breakfast_nonveg %}
+      <div class="menu-item-section">
+        <div class="menu-item-type">
+          <i class="fas fa-drumstick-bite" style="color:var(--danger);margin-right:3px;"></i> Non-Veg
+        </div>
+        <div class="menu-items">{{ menu.breakfast_nonveg }}</div>
+      </div>
+      {% endif %}
+      {% if not menu.breakfast_veg and not menu.breakfast_nonveg %}
+        <p class="text-muted text-small" style="font-style:italic;">No menu set.</p>
+      {% endif %}
+    </div>
+  </div>
 
-{% endif %}
-Dinner {{ menu.dinner_time or '7:00 – 9:00 PM' }}
-{% if menu.dinner_veg %}
-Veg
-{{ menu.dinner_veg }}
-{% endif %} {% if menu.dinner_nonveg %}
-Non-Veg
-{{ menu.dinner_nonveg }}
-{% endif %} {% if not menu.dinner_veg and not menu.dinner_nonveg %}
-No menu set.
+  <!-- Lunch -->
+  <div class="menu-card">
+    <div class="menu-card-header lunch">
+      <i class="fas fa-cloud-sun"></i> Lunch
+      <span style="font-size:0.75rem;font-weight:400;margin-left:auto;">
+        {{ menu.lunch_time or '12:00 – 2:00 PM' }}
+      </span>
+    </div>
+    <div class="menu-card-body">
+      {% if menu.lunch_veg %}
+      <div class="menu-item-section">
+        <div class="menu-item-type">
+          <i class="fas fa-leaf" style="color:var(--success);margin-right:3px;"></i> Veg
+        </div>
+        <div class="menu-items">{{ menu.lunch_veg }}</div>
+      </div>
+      {% endif %}
+      {% if menu.lunch_nonveg %}
+      <div class="menu-item-section">
+        <div class="menu-item-type">
+          <i class="fas fa-drumstick-bite" style="color:var(--danger);margin-right:3px;"></i> Non-Veg
+        </div>
+        <div class="menu-items">{{ menu.lunch_nonveg }}</div>
+      </div>
+      {% endif %}
+      {% if not menu.lunch_veg and not menu.lunch_nonveg %}
+        <p class="text-muted text-small" style="font-style:italic;">No menu set.</p>
+      {% endif %}
+    </div>
+  </div>
 
-{% endif %}
+  <!-- Dinner -->
+  <div class="menu-card">
+    <div class="menu-card-header dinner">
+      <i class="fas fa-moon"></i> Dinner
+      <span style="font-size:0.75rem;font-weight:400;margin-left:auto;">
+        {{ menu.dinner_time or '7:00 – 9:00 PM' }}
+      </span>
+    </div>
+    <div class="menu-card-body">
+      {% if menu.dinner_veg %}
+      <div class="menu-item-section">
+        <div class="menu-item-type">
+          <i class="fas fa-leaf" style="color:var(--success);margin-right:3px;"></i> Veg
+        </div>
+        <div class="menu-items">{{ menu.dinner_veg }}</div>
+      </div>
+      {% endif %}
+      {% if menu.dinner_nonveg %}
+      <div class="menu-item-section">
+        <div class="menu-item-type">
+          <i class="fas fa-drumstick-bite" style="color:var(--danger);margin-right:3px;"></i> Non-Veg
+        </div>
+        <div class="menu-items">{{ menu.dinner_nonveg }}</div>
+      </div>
+      {% endif %}
+      {% if not menu.dinner_veg and not menu.dinner_nonveg %}
+        <p class="text-muted text-small" style="font-style:italic;">No menu set.</p>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
 {% else %}
-No menu has been set for {{ selected_date or today }} by the vendor yet.
-{% endif %} {% endblock %}
+<div class="notice-box info">
+  <i class="fas fa-info-circle"></i>
+  <span>No menu has been set for <strong>{{ selected_date or today }}</strong> by the vendor yet.</span>
+</div>
+{% endif %}
+
+{% endblock %}
