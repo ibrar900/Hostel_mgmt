@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block title %}My Dashboard{% endblock %}
+{% block topbar_title %}Student Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>
+    <i class="fas fa-home" style="color:var(--accent);margin-right:10px;"></i>
+    Welcome, {{ student.name or session.name }}!
+  </h1>
+  <span class="badge {{ 'badge-veg' if food_pref == 'veg' else 'badge-nonveg' }}"
+        style="font-size:0.85rem;padding:6px 14px;">
+    {% if food_pref == 'veg' %}
+      <i class="fas fa-leaf"></i> Vegetarian
+    {% else %}
+      <i class="fas fa-drumstick-bite"></i> Non-Vegetarian
+    {% endif %}
+  </span>
+</div>
+
+<!-- Welcome Card + Attendance -->
+<div class="grid-2" style="margin-bottom:24px;">
+
+  <!-- Student Info Card -->
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-id-card"></i> My Profile</h3>
+      <a href="{{ url_for('auth.change_password') }}" class="btn btn-outline btn-sm">
+        <i class="fas fa-key"></i> Change Password
+      </a>
+    </div>
+    <div class="card-body">
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="width:56px;height:56px;border-radius:50%;background:var(--navy);
+                      color:#fff;display:flex;align-items:center;justify-content:center;
+                      font-size:1.4rem;font-weight:700;flex-shrink:0;">
+            {{ (student.name or 'S')[0:1] | upper }}
+          </div>
+          <div>
+            <div style="font-weight:600;font-size:1rem;">{{ student.name }}</div>
+            <div style="font-size:0.8rem;color:var(--text-muted);">
+              <code>{{ student.usn }}</code>
+            </div>
+            <div style="font-size:0.8rem;color:var(--text-muted);">{{ student.programme }}</div>
+          </div>
+        </div>
+
+        <div class="divider" style="margin:6px 0;"></div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div>
+            <div class="text-small text-muted">Room</div>
+            <div style="font-weight:600;color:var(--navy);">{{ student.room_number }}</div>
+          </div>
+          <div>
+            <div class="text-small text-muted">Hostel</div>
+            <div style="font-weight:600;">{{ student.hostel_name }}</div>
+          </div>
+          {% if roommate %}
+          <div>
+            <div class="text-small text-muted">Roommate</div>
+            <div style="font-size:0.85rem;">{{ roommate.name }}</div>
+          </div>
+          {% endif %}
+          <div>
+            <div class="text-small text-muted">Food Pref</div>
+            <span class="badge {{ 'badge-veg' if food_pref == 'veg' else 'badge-nonveg' }}">
+              {{ 'Veg' if food_pref == 'veg' else 'Non-Veg' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Attendance This Month -->
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-calendar-check"></i> Attendance – This Month</h3>
+      <a href="{{ url_for('student.attendance') }}" class="btn btn-outline btn-sm">
+        View Full <i class="fas fa-arrow-right"></i>
+      </a>
+    </div>
+    <div class="card-body" style="display:flex;align-items:center;gap:28px;flex-wrap:wrap;">
+      <!-- Progress ring -->
+      <div class="progress-circle-container">
+        <svg width="100" height="100" class="progress-ring">
+          <circle class="progress-ring-track" cx="50" cy="50" r="42" stroke-width="8" />
+          <circle class="progress-ring-fill" cx="50" cy="50" r="42" stroke-width="8"
+                  data-percent="{{ attendance.pct or 0 }}" />
+        </svg>
+        <div class="progress-circle-label" style="margin-top:-80px;position:relative;z-index:1;
+             line-height:1;text-align:center;pointer-events:none;">
+          {{ attendance.pct or 0 }}%
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div>
+          <span class="badge badge-present">Present</span>
+          <strong style="margin-left:8px;font-size:1.1rem;">{{ attendance.present or 0 }}</strong>
+          <span class="text-muted text-small"> days</span>
+        </div>
+        <div>
+          <span class="badge badge-absent">Absent</span>
+          <strong style="margin-left:8px;font-size:1.1rem;">{{ attendance.absent or 0 }}</strong>
+          <span class="text-muted text-small"> days</span>
+        </div>
+        <div>
+          <span class="badge badge-on-leave">On Leave</span>
+          <strong style="margin-left:8px;font-size:1.1rem;">{{ attendance.on_leave or 0 }}</strong>
+          <span class="text-muted text-small"> days</span>
+        </div>
+        <div style="font-size:0.8rem;color:var(--text-muted);">
+          Total working days: <strong>{{ attendance.total or 0 }}</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /.grid-2 -->
+
+<!-- Active Permission Status -->
+{% if active_permission %}
+<div class="permission-status-card {{ active_permission.status }}" style="margin-bottom:20px;">
+  <div class="permission-status-icon">
+    {% if active_permission.status == 'pending' %}
+      <i class="fas fa-hourglass-half"></i>
+    {% elif active_permission.status == 'approved' %}
+      <i class="fas fa-check-circle"></i>
+    {% else %}
+      <i class="fas fa-times-circle"></i>
+    {% endif %}
+  </div>
+  <div>
+    <div style="font-weight:600;margin-bottom:4px;">
+      Active Permission: {{ active_permission.type | replace('_', ' ') | title }}
+    </div>
+    <div class="text-small" style="margin-bottom:4px;">
+      {{ active_permission.from_date }} → {{ active_permission.to_date }}
+    </div>
+    <div class="text-small text-muted">{{ active_permission.reason }}</div>
+    {% if active_permission.status == 'approved' %}
+    <div class="text-small" style="color:var(--accent);margin-top:4px;">
+      <i class="fas fa-info-circle"></i> Food is paused during your absence.
+    </div>
+    {% endif %}
+  </div>
+  <span class="badge badge-{{ active_permission.status }}" style="margin-left:auto;white-space:nowrap;">
+    {{ active_permission.status | title }}
+  </span>
+</div>
+{% endif %}
+
+<!-- Today's Menu -->
+<div class="card" style="margin-bottom:24px;">
+  <div class="card-header">
+    <h3><i class="fas fa-utensils"></i> Today's Menu</h3>
+    <a href="{{ url_for('student.food') }}" class="btn btn-outline btn-sm">
+      Full Menu <i class="fas fa-arrow-right"></i>
+    </a>
+  </div>
+  <div class="card-body">
+    {% if today_menu %}
+    <div class="menu-grid">
+      <!-- Breakfast -->
+      <div class="menu-card">
+        <div class="menu-card-header breakfast">
+          <i class="fas fa-sun"></i> Breakfast
+        </div>
+        <div class="menu-card-body">
+          {% set pref_key = 'breakfast_veg' if food_pref == 'veg' else 'breakfast_nonveg' %}
+          <div class="menu-items">{{ today_menu[pref_key] or 'Not set' }}</div>
+        </div>
+      </div>
+      <!-- Lunch -->
+      <div class="menu-card">
+        <div class="menu-card-header lunch">
+          <i class="fas fa-cloud-sun"></i> Lunch
+        </div>
+        <div class="menu-card-body">
+          {% set pref_key = 'lunch_veg' if food_pref == 'veg' else 'lunch_nonveg' %}
+          <div class="menu-items">{{ today_menu[pref_key] or 'Not set' }}</div>
+        </div>
+      </div>
+      <!-- Dinner -->
+      <div class="menu-card">
+        <div class="menu-card-header dinner">
+          <i class="fas fa-moon"></i> Dinner
+        </div>
+        <div class="menu-card-body">
+          {% set pref_key = 'dinner_veg' if food_pref == 'veg' else 'dinner_nonveg' %}
+          <div class="menu-items">{{ today_menu[pref_key] or 'Not set' }}</div>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div style="text-align:center;color:var(--text-muted);padding:20px;">
+      <i class="fas fa-utensils" style="font-size:1.8rem;margin-bottom:8px;display:block;color:#c5cee0;"></i>
+      Menu not set for today yet.
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Quick Links -->
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+  </div>
+  <div class="card-body">
+    <div class="quick-actions">
+      <a href="{{ url_for('student.permissions') }}" class="btn btn-navy btn-lg">
+        <i class="fas fa-passport"></i> Request Permission
+      </a>
+      <a href="{{ url_for('student.attendance') }}" class="btn btn-blue btn-lg">
+        <i class="fas fa-calendar-check"></i> View Attendance
+      </a>
+      <a href="{{ url_for('student.food') }}" class="btn btn-accent btn-lg">
+        <i class="fas fa-utensils"></i> Food Preference
+      </a>
+      <a href="{{ url_for('student.complaints') }}" class="btn btn-outline-accent btn-lg">
+        <i class="fas fa-comment-dots"></i> Submit Complaint
+      </a>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
