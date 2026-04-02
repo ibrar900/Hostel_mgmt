@@ -1,0 +1,14 @@
+{% extends "base.html" %} {% block title %}Students{% endblock %} {% block topbar_title %}Students{% endblock %} {% block content %}
+Students
+Add Student
+Student List ({{ total_count or 0 }} students)
+Search by name, USN, room...
+{% if students %} {% for s in students %} {% endfor %} {% else %} {% endif %}
+#	Name	USN	Programme	Room	Food Pref	Status	Actions
+{{ loop.index + ((page-1)*per_page if page is defined else 0) }}	{{ s.name }}
+{{ s.email or '' }}	{{ s.usn }}	{{ s.programme }}	{{ s.room_number }}	{{ 'Veg' if s.food_pref == 'veg' else 'Non-Veg' }}	{{ 'Active' if s.active else 'Inactive' }}	
+No students found. Add the first student
+{% if total_pages is defined and total_pages > 1 %}
+{% for p in range(1, total_pages + 1) %} {{ p }} {% endfor %}
+{% endif %}
+{% endblock %}
