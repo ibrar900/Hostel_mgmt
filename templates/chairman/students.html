@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}All Students{% endblock %}
+{% block topbar_title %}Students Overview{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-users" style="color:var(--accent);margin-right:10px;"></i>All Students</h1>
+  <div style="font-size:0.82rem;color:var(--text-muted);">
+    Total: <strong>{{ total_count or 0 }}</strong> students
+  </div>
+</div>
+
+<!-- Filter + Search -->
+<div class="card" style="margin-bottom:20px;">
+  <div class="card-body" style="padding:14px 22px;">
+    <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
+
+      <!-- Hostel filter -->
+      <div style="display:flex;gap:6px;">
+        {% for f, label in [('all','All'), ('boys','Boys'), ('girls','Girls')] %}
+        <a href="{{ url_for('chairman.students', hostel=f, q=search_q or '') }}"
+           class="btn {{ 'btn-navy' if hostel_filter == f or (not hostel_filter and f == 'all') else 'btn-outline' }} btn-sm">
+          {% if f == 'boys' %}<i class="fas fa-male"></i>{% elif f == 'girls' %}<i class="fas fa-female"></i>{% else %}<i class="fas fa-users"></i>{% endif %}
+          {{ label }}
+        </a>
+        {% endfor %}
+      </div>
+
+      <!-- Search -->
+      <form method="GET" action="{{ url_for('chairman.students') }}"
+            style="display:flex;gap:8px;flex:1;max-width:360px;">
+        <input type="hidden" name="hostel" value="{{ hostel_filter or 'all' }}" />
+        <div class="search-bar" style="flex:1;max-width:100%;">
+          <i class="fas fa-search"></i>
+          <input type="text" name="q" placeholder="Search name, USN, room..."
+                 value="{{ search_q or '' }}" />
+        </div>
+        <button type="submit" class="btn btn-blue btn-sm">
+          <i class="fas fa-search"></i>
+        </button>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-list"></i>
+      Student List
+      <span style="font-size:0.8rem;font-weight:400;color:var(--text-muted);margin-left:6px;">
+        ({{ students | length if students else 0 }} shown)
+      </span>
+    </h3>
+  </div>
+  <div class="card-body no-pad">
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Hostel</th>
+            <th>Name</th>
+            <th>USN</th>
+            <th>Room</th>
+            <th>Programme</th>
+            <th>Food Pref</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if students %}
+            {% for s in students %}
+            <tr>
+              <td class="text-muted text-small">{{ loop.index }}</td>
+              <td>
+                <span class="badge"
+                      style="{{ 'background:rgba(13,27,75,0.1);color:var(--navy);' if s.hostel_type == 'boys'
+                                else 'background:rgba(106,27,154,0.1);color:#6a1b9a;' }}">
+                  <i class="fas fa-{{ 'male' if s.hostel_type == 'boys' else 'female' }}"></i>
+                  {{ 'Boys' if s.hostel_type == 'boys' else 'Girls' }}
+                </span>
+              </td>
+              <td>
+                <strong>{{ s.name }}</strong><br/>
+                <span class="text-muted text-small">{{ s.email or '' }}</span>
+              </td>
+              <td><code style="font-size:0.82rem;">{{ s.usn }}</code></td>
+              <td style="font-weight:600;color:var(--navy);">{{ s.room_number }}</td>
+              <td class="text-small">{{ s.programme }}</td>
+              <td>
+                <span class="badge {{ 'badge-veg' if s.food_pref == 'veg' else 'badge-nonveg' }}">
+                  {{ 'Veg' if s.food_pref == 'veg' else 'Non-Veg' }}
+                </span>
+              </td>
+              <td>
+                <span class="badge {{ 'badge-approved' if s.active else 'badge-rejected' }}">
+                  {{ 'Active' if s.active else 'Inactive' }}
+                </span>
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="8" style="text-align:center;padding:32px;color:var(--text-muted);">
+                No students found matching the criteria.
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
