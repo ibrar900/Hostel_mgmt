@@ -1,0 +1,60 @@
+{% extends "base.html" %} {% block title %}Warden Dashboard{% endblock %} {% block topbar_title %} {{ hostel_name or ('Boys Hostel' if session.role == 'warden_boys' else 'Girls Hostel') }} {% endblock %} {% block content %}
+{{ hostel_name or ('Boys Hostel' if session.role == 'warden_boys' else 'Girls Hostel') }}
+{{ today or 'Today' }}
+{% if attendance_done %} Attendance Marked Today {% else %} Attendance Not Marked Yet {% endif %}
+Total Students
+{{ total_students or 0 }}
+Enrolled in hostel
+Present Today
+{{ present_today or 0 }}
+{{ present_pct or '—' }}% attendance
+Absent
+{{ absent_today or 0 }}
+Includes on-leave
+Pending Permissions
+{{ pending_permissions or 0 }}
+Awaiting approval
+Open Complaints
+{{ open_complaints or 0 }}
+Unresolved food complaints
+Rooms Occupied
+{{ rooms_occupied or 0 }}
+of {{ total_rooms or 0 }} total rooms
+Mark Attendance Add Student View Rooms Reports
+Pending Permissions
+View All
+{% if recent_permissions %}
+{% for p in recent_permissions %} {% endfor %}
+Student	Type	Dates	Actions
+{{ p.student_name }}
+{{ p.usn }}	{{ p.type | title }}	{{ p.from_date }} → {{ p.to_date }}	
+Approve Reject
+{% else %}
+No pending permissions
+{% endif %}
+Recent Complaints
+View All
+{% if recent_complaints %}
+{% for c in recent_complaints %} {% endfor %}
+Student	Date	Category	Status
+{{ c.student_name }}
+{{ c.meal_type | title }}	{{ c.date }}	{{ c.category | title }}	{{ c.status | title }}
+{% else %}
+No recent complaints
+{% endif %}
+Approve Permission
+
+Approving permission for:
+
+Food will be automatically paused for the student during their absence.
+Note / Remarks (optional) 
+Add any remarks for this approval...
+Cancel Confirm Approval
+Reject Permission
+
+Rejecting permission for:
+
+Reason for Rejection * 
+State the reason for rejection...
+Cancel Confirm Rejection
+{% endblock %}
