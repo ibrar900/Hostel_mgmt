@@ -1,0 +1,12 @@
+{% extends "base.html" %} {% block title %}Complaints{% endblock %} {% block topbar_title %}Complaints{% endblock %} {% block content %}
+Complaints
+Open {% if open_count %}{{ open_count }}{% endif %} Acknowledged Resolved
+{{ (status_filter or 'All') | title }} Complaints ({{ complaints | length if complaints else 0 }})
+Search...
+{% if complaints %} {% for c in complaints %} {% endfor %} {% else %} {% endif %}
+Student	Room	Date	Meal	Category	Description	Photo	Vendor Response	Warden Note	Status	Action
+{{ c.student_name }}	{{ c.room_number }}	{{ c.date }}	{{ c.meal_type | title }}	{{ c.category | title }}	{{ c.description }}	{% if c.photo_url %}  {% else %}—{% endif %}	{{ c.vendor_response or '—' }}	
+{{ c.warden_note or '—' }}
+{{ c.status | title }}	Note
+No {{ status_filter or '' }} complaints.
+{% endblock %}
