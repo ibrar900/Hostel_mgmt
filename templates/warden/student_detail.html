@@ -1,0 +1,19 @@
+{% extends "base.html" %} {% block title %}Student Detail{% endblock %} {% block topbar_title %}Student Detail{% endblock %} {% block content %}
+{{ student.name }}
+Edit
+Back
+Student Info
+{% for label, val in [ ('USN', student.usn), ('Name', student.name), ('Programme', student.programme), ('Hostel', student.hostel_name), ('Room', student.room_number), ('Floor', student.floor_label), ('Email', student.email or '—'), ('Phone', student.phone or '—'), ('Father Phone', student.father_phone or '—'), ('Mother Phone', student.mother_phone or '—'), ('Food Preference', student.food_preference), ] %} {% endfor %}
+{{ label }}	{{ val }}
+Attendance
+{% set pct = (att.present / att.total * 100)|round(1) if att and att.total else 0 %}
+{{ pct }}%
+{{ att.present if att else 0 }} present / {{ att.total if att else 0 }} days recorded
+Recent Permissions
+{% if perms %} {% for p in perms %} {% endfor %}
+{{ p.permission_type }}	{{ p.from_date }} to {{ p.to_date }}	{{ p.status }}
+{% else %}
+No permissions found.
+
+{% endif %}
+{% endblock %}
