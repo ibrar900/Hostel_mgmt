@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Fees{% endblock %}
+{% block topbar_title %}Fees Overview{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-rupee-sign" style="color:var(--accent);margin-right:10px;"></i>Fees Overview</h1>
+  <button class="btn btn-outline no-print" onclick="window.print()">
+    <i class="fas fa-print"></i> Print / PDF
+  </button>
+</div>
+
+<!-- Summary Stats -->
+<div class="stats-grid" style="margin-bottom:22px;">
+  <div class="stat-card success">
+    <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+    <div class="stat-label">Total Collected</div>
+    <div class="stat-value">&#8377;{{ "%.0f"|format(total_collected) }}</div>
+  </div>
+  <div class="stat-card danger">
+    <div class="stat-icon"><i class="fas fa-exclamation-circle"></i></div>
+    <div class="stat-label">Total Dues</div>
+    <div class="stat-value">&#8377;{{ "%.0f"|format(total_dues) }}</div>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="card no-print" style="margin-bottom:18px;">
+  <div class="card-body">
+    <form method="GET" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+      <div class="form-group" style="margin-bottom:0;min-width:180px;">
+        <label class="form-label">Search</label>
+        <input type="text" class="form-control" name="q" value="{{ q or '' }}" placeholder="Name or USN" />
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">Hostel</label>
+        <select class="form-select" name="hostel">
+          <option value="all" {{ 'selected' if hfilter == 'all' else '' }}>All</option>
+          <option value="B"   {{ 'selected' if hfilter == 'B'   else '' }}>Boys</option>
+          <option value="G"   {{ 'selected' if hfilter == 'G'   else '' }}>Girls</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">Status</label>
+        <select class="form-select" name="status">
+          <option value="all"       {{ 'selected' if status_f == 'all'       else '' }}>All</option>
+          <option value="due"       {{ 'selected' if status_f == 'due'       else '' }}>Due</option>
+          <option value="paid"      {{ 'selected' if status_f == 'paid'      else '' }}>Paid</option>
+          <option value="partial"   {{ 'selected' if status_f == 'partial'   else '' }}>Partial</option>
+          <option value="no_record" {{ 'selected' if status_f == 'no_record' else '' }}>No Record</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-navy" style="margin-bottom:0;">
+        <i class="fas fa-search"></i> Filter
+      </button>
+      <a href="{{ url_for('office.fees') }}" class="btn btn-outline" style="margin-bottom:0;">
+        <i class="fas fa-redo"></i> Reset
+      </a>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-list"></i> Student Fee Status
+      <span style="font-size:0.8rem;font-weight:400;color:var(--text-muted);margin-left:6px;">({{ students | length }})</span>
+    </h3>
+  </div>
+  <div class="card-body no-pad">
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>USN</th>
+            <th>Hostel</th>
+            <th>Room</th>
+            <th>Total (₹)</th>
+            <th>Paid (₹)</th>
+            <th>Due (₹)</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in students %}
+          {% set due = [s.total_amount - s.paid_amount, 0] | max %}
+          <tr>
+            <td><strong>{{ s.name }}</strong></td>
+            <td><code>{{ s.usn }}</code></td>
+            <td>
+              {% if s.hostel_code %}
+              <span class="badge" style="{{ 'background:rgba(13,27,75,0.1);color:var(--navy);' if s.hostel_code == 'B' else 'background:rgba(106,27,154,0.1);color:#6a1b9a;' }}">
+                {{ 'Boys' if s.hostel_code == 'B' else 'Girls' }}
+              </span>
+              {% else %}—{% endif %}
+            </td>
+            <td>{{ s.room_number or '—' }}</td>
+            <td>{% if s.total_amount > 0 %}&#8377;{{ "%.0f"|format(s.total_amount) }}{% else %}—{% endif %}</td>
+            <td style="color:var(--success);">{% if s.paid_amount > 0 %}&#8377;{{ "%.0f"|format(s.paid_amount) }}{% else %}—{% endif %}</td>
+            <td>
+              {% if due > 0 %}
+              <strong style="color:var(--danger);">&#8377;{{ "%.0f"|format(due) }}</strong>
+              {% else %}
+              <span style="color:var(--success);">Nil</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if s.total_amount == 0 %}
+                <span class="badge" style="background:#e0e0e0;color:#555;">No Record</span>
+              {% elif s.paid_amount >= s.total_amount %}
+                <span class="badge badge-approved">Paid</span>
+              {% elif s.paid_amount > 0 %}
+                <span class="badge badge-pending">Partial</span>
+              {% else %}
+                <span class="badge badge-rejected">Due</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="8" style="text-align:center;padding:32px;color:var(--text-muted);">
+              No records found.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
