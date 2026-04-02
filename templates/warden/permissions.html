@@ -1,43 +1,333 @@
-{% extends "base.html" %} {% block title %}Permissions{% endblock %} {% block topbar_title %}Permission Requests{% endblock %} {% block content %}
-Permission Requests
-Food is automatically paused when a permission is approved.
-Policy: No out-pass after 7:30 PM. Food is automatically suspended for students on approved permissions.
-Pending {% if pending_count %}{{ pending_count }}{% endif %} Approved Rejected
-{{ (status_filter or 'All') | title }} Permissions ({{ permissions | length if permissions else 0 }} records)
-Search...
-{% if status_filter == 'pending' or not status_filter %} {% endif %} {% if permissions %} {% for p in permissions %} {% set has_parent = p.father_phone or p.mother_phone or p.guardian_phone or p.parent_contact %} {% if status_filter == 'pending' or not status_filter %} {% endif %} {% endfor %} {% else %} {% endif %}
-Student	Room	Type	Dates	Reason	Parent Contact	Status	Actions
-{{ p.student_name }}
-{{ p.usn }} {% if p.student_phone %}
-{{ p.student_phone }} {% endif %}	{{ p.room_number }}	{{ p.permission_type | replace('_', ' ') | title }}	{{ p.from_date }}
-to
-{{ p.to_date }}	{{ p.reason }}	{% if p.parent_contact %}
-Provided:
-{{ p.parent_contact }}
-{% endif %} {% if p.father_phone %}
-Father: {{ p.father_phone }}
-{% endif %} {% if p.mother_phone %}
-Mother: {{ p.mother_phone }}
-{% endif %} {% if p.guardian_phone %}
-Guardian: {{ p.guardian_phone }}
-{% endif %} {% if not has_parent %} Not provided {% endif %}	{{ p.status | title }} {% if p.review_note %}
-{{ p.review_note }}
-{% endif %}	{% if p.status == 'pending' %}
-Approve Reject
-{% else %} — {% endif %}
-No {{ status_filter or '' }} permissions found.
-Approve Permission
+{% extends "base.html" %}
 
-Call to Verify — Parent / Guardian Numbers
-Food will be automatically paused for the duration of the permission.
-Note / Remarks (optional) 
-e.g. Parent confirmed via phone...
-Cancel Approve
-Reject Permission
+{% block title %}Permissions{% endblock %}
+{% block topbar_title %}Permission Requests{% endblock %}
 
-Rejecting permission for:
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-passport" style="color:var(--accent);margin-right:10px;"></i>Permission Requests</h1>
+  <div style="font-size:0.82rem;color:var(--text-muted);">
+    <i class="fas fa-info-circle" style="margin-right:4px;"></i>
+    Food is automatically paused when a permission is approved.
+  </div>
+</div>
 
-Reason for Rejection * 
-Provide a reason for rejection...
-Cancel Reject
-{% block scripts %} {% endblock %} {% endblock %}
+<!-- Cut-off notice -->
+<div class="notice-box warning" style="margin-bottom:20px;">
+  <i class="fas fa-clock"></i>
+  <span><strong>Policy:</strong> No out-pass after <strong>7:30 PM</strong>. Food is automatically suspended for students on approved permissions.</span>
+</div>
+
+<!-- Filter Tabs -->
+<div class="tab-nav" data-tab-group>
+  <button class="tab-nav-btn {{ 'active' if status_filter == 'pending' else '' }}"
+          onclick="window.location='{{ url_for('warden.permissions', status='pending') }}'">
+    <i class="fas fa-clock"></i> Pending
+    {% if pending_count %}<span class="badge badge-pending" style="margin-left:4px;">{{ pending_count }}</span>{% endif %}
+  </button>
+  <button class="tab-nav-btn {{ 'active' if status_filter == 'approved' else '' }}"
+          onclick="window.location='{{ url_for('warden.permissions', status='approved') }}'">
+    <i class="fas fa-check-circle"></i> Approved
+  </button>
+  <button class="tab-nav-btn {{ 'active' if status_filter == 'rejected' else '' }}"
+          onclick="window.location='{{ url_for('warden.permissions', status='rejected') }}'">
+    <i class="fas fa-times-circle"></i> Rejected
+  </button>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3>
+      <i class="fas fa-list"></i>
+      {{ (status_filter or 'All') | title }} Permissions
+      <span style="font-size:0.8rem;font-weight:400;color:var(--text-muted);margin-left:6px;">
+        ({{ permissions | length if permissions else 0 }} records)
+      </span>
+    </h3>
+    <div class="search-bar">
+      <i class="fas fa-search"></i>
+      <input type="text" placeholder="Search..." data-search-table="permissionsTable" />
+    </div>
+  </div>
+
+  <div class="card-body no-pad">
+    <div class="table-responsive">
+      <table id="permissionsTable">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Room</th>
+            <th>Type</th>
+            <th>Dates</th>
+            <th>Reason</th>
+            <th>Parent Contact</th>
+            <th>Status</th>
+            {% if status_filter == 'pending' or not status_filter %}
+            <th>Actions</th>
+            {% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% if permissions %}
+            {% for p in permissions %}
+            {% set has_parent = p.father_phone or p.mother_phone or p.guardian_phone or p.parent_contact %}
+            <tr>
+              <td>
+                <strong>{{ p.student_name }}</strong><br/>
+                <span class="text-muted text-small">{{ p.usn }}</span>
+                {% if p.student_phone %}
+                  <br/><span class="text-small" style="color:var(--text-muted);">
+                    <i class="fas fa-mobile-alt" style="font-size:0.7rem;"></i> {{ p.student_phone }}
+                  </span>
+                {% endif %}
+              </td>
+              <td style="font-weight:600;">{{ p.room_number }}</td>
+              <td>
+                <span class="badge badge-pending">{{ p.permission_type | replace('_', ' ') | title }}</span>
+              </td>
+              <td class="text-small">
+                {{ p.from_date }}<br/>
+                <span style="color:var(--text-muted);">to</span><br/>
+                {{ p.to_date }}
+              </td>
+              <td style="max-width:180px;font-size:0.82rem;">{{ p.reason }}</td>
+              <td style="font-size:0.82rem;">
+                {% if p.parent_contact %}
+                  <div style="margin-bottom:3px;">
+                    <span style="color:var(--text-muted);font-size:0.75rem;">Provided:</span><br/>
+                    <a href="tel:{{ p.parent_contact }}" style="color:var(--navy);font-weight:600;">
+                      <i class="fas fa-phone"></i> {{ p.parent_contact }}
+                    </a>
+                  </div>
+                {% endif %}
+                {% if p.father_phone %}
+                  <div style="margin-bottom:2px;">
+                    <span style="color:var(--text-muted);font-size:0.72rem;">Father:</span>
+                    <a href="tel:{{ p.father_phone }}" style="color:var(--navy);">{{ p.father_phone }}</a>
+                  </div>
+                {% endif %}
+                {% if p.mother_phone %}
+                  <div style="margin-bottom:2px;">
+                    <span style="color:var(--text-muted);font-size:0.72rem;">Mother:</span>
+                    <a href="tel:{{ p.mother_phone }}" style="color:var(--navy);">{{ p.mother_phone }}</a>
+                  </div>
+                {% endif %}
+                {% if p.guardian_phone %}
+                  <div>
+                    <span style="color:var(--text-muted);font-size:0.72rem;">Guardian:</span>
+                    <a href="tel:{{ p.guardian_phone }}" style="color:var(--navy);">{{ p.guardian_phone }}</a>
+                  </div>
+                {% endif %}
+                {% if not has_parent %}
+                  <span class="text-muted" style="font-style:italic;font-size:0.78rem;">Not provided</span>
+                {% endif %}
+              </td>
+              <td>
+                <span class="badge badge-{{ p.status }}">
+                  {{ p.status | title }}
+                </span>
+                {% if p.review_note %}
+                  <div class="text-small text-muted" style="margin-top:3px;font-style:italic;">
+                    {{ p.review_note }}
+                  </div>
+                {% endif %}
+              </td>
+              {% if status_filter == 'pending' or not status_filter %}
+              <td>
+                {% if p.status == 'pending' %}
+                <div class="table-actions">
+                  <button class="btn btn-success btn-sm"
+                          data-approve-id="{{ p.id }}"
+                          data-student-name="{{ p.student_name }}"
+                          data-usn="{{ p.usn }}"
+                          data-room="{{ p.room_number }}"
+                          data-type="{{ p.permission_type | replace('_',' ') | title }}"
+                          data-from="{{ p.from_date }}"
+                          data-to="{{ p.to_date }}"
+                          data-reason="{{ p.reason }}"
+                          data-parent-contact="{{ p.parent_contact or '' }}"
+                          data-father-phone="{{ p.father_phone or '' }}"
+                          data-mother-phone="{{ p.mother_phone or '' }}"
+                          data-guardian-phone="{{ p.guardian_phone or '' }}">
+                    <i class="fas fa-check"></i> Approve
+                  </button>
+                  <button class="btn btn-danger btn-sm"
+                          data-reject-id="{{ p.id }}"
+                          data-student-name="{{ p.student_name }}">
+                    <i class="fas fa-times"></i> Reject
+                  </button>
+                </div>
+                {% else %}
+                  <span class="text-muted text-small">—</span>
+                {% endif %}
+              </td>
+              {% endif %}
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="8" style="text-align:center;padding:32px;color:var(--text-muted);">
+                <i class="fas fa-passport" style="font-size:2rem;margin-bottom:10px;display:block;color:#c5cee0;"></i>
+                No {{ status_filter or '' }} permissions found.
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Approve Modal -->
+<div class="modal-backdrop" id="approveModal">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <h3><i class="fas fa-check-circle" style="color:var(--success);"></i> Approve Permission</h3>
+      <button class="modal-close" data-modal-close><i class="fas fa-times"></i></button>
+    </div>
+    <form method="POST" action="{{ url_for('warden.approve_permission') }}">
+      <input type="hidden" name="csrf_token"
+             value="{{ csrf_token() if csrf_token is defined else '' }}" />
+      <input type="hidden" name="permission_id" id="approvePermId" value="" />
+      <input type="hidden" name="redirect_to" value="{{ url_for('warden.permissions', status='pending') }}" />
+      <div class="modal-body">
+
+        <!-- Student & Request Details -->
+        <div style="background:var(--bg-light,#f4f6fb);border-radius:8px;padding:14px;margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
+            <div>
+              <div style="font-weight:700;color:var(--navy);font-size:1rem;" id="modal-student-name"></div>
+              <div style="font-size:0.8rem;color:var(--text-muted);" id="modal-usn-room"></div>
+            </div>
+            <div style="text-align:right;">
+              <span class="badge badge-pending" id="modal-perm-type"></span>
+              <div style="font-size:0.8rem;margin-top:4px;color:var(--text-muted);" id="modal-dates"></div>
+            </div>
+          </div>
+          <div style="margin-top:10px;font-size:0.85rem;color:#444;border-top:1px solid #e0e4ef;padding-top:8px;" id="modal-reason"></div>
+        </div>
+
+        <!-- Parent / Guardian Contact -->
+        <div id="modal-parent-section" style="background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:14px;margin-bottom:14px;">
+          <div style="font-weight:600;color:#b45309;margin-bottom:8px;">
+            <i class="fas fa-phone-alt"></i> Call to Verify — Parent / Guardian Numbers
+          </div>
+          <div id="modal-parent-contacts" style="font-size:0.9rem;"></div>
+          <div id="modal-no-contact" style="display:none;color:#b45309;font-size:0.85rem;font-style:italic;">
+            <i class="fas fa-exclamation-triangle"></i>
+            No parent contact was provided. Verify manually before approving.
+          </div>
+        </div>
+
+        <div class="notice-box success" style="margin-bottom:14px;">
+          <i class="fas fa-check-circle"></i>
+          <span>Food will be automatically paused for the duration of the permission.</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Note / Remarks (optional)</label>
+          <textarea class="form-control" name="note" rows="2"
+                    placeholder="e.g. Parent confirmed via phone..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+        <button type="submit" class="btn btn-success">
+          <i class="fas fa-check"></i> Approve
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal-backdrop" id="rejectModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3><i class="fas fa-times-circle" style="color:var(--danger);"></i> Reject Permission</h3>
+      <button class="modal-close" data-modal-close><i class="fas fa-times"></i></button>
+    </div>
+    <form method="POST" action="{{ url_for('warden.reject_permission') }}">
+      <input type="hidden" name="csrf_token"
+             value="{{ csrf_token() if csrf_token is defined else '' }}" />
+      <input type="hidden" name="permission_id" value="" />
+      <input type="hidden" name="redirect_to" value="{{ url_for('warden.permissions', status='pending') }}" />
+      <div class="modal-body">
+        <p style="color:var(--text-muted);font-size:0.875rem;margin-bottom:14px;">
+          Rejecting permission for:
+          <strong class="modal-student-name" style="color:var(--navy);"></strong>
+        </p>
+        <div class="form-group">
+          <label class="form-label">Reason for Rejection <span class="required">*</span></label>
+          <textarea class="form-control" name="reason" rows="3" required
+                    placeholder="Provide a reason for rejection..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+        <button type="submit" class="btn btn-danger">
+          <i class="fas fa-times"></i> Reject
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('[data-approve-id]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var d = btn.dataset;
+      document.getElementById('approvePermId').value = d.approveId;
+      document.getElementById('modal-student-name').textContent = d.studentName;
+      document.getElementById('modal-usn-room').textContent = d.usn + ' · Room ' + d.room;
+      document.getElementById('modal-perm-type').textContent = d.type;
+      document.getElementById('modal-dates').textContent = d.from + ' → ' + d.to;
+      document.getElementById('modal-reason').textContent = 'Reason: ' + d.reason;
+
+      var contacts = [];
+      if (d.parentContact) contacts.push({label: 'Contact (provided)', phone: d.parentContact});
+      if (d.fatherPhone)   contacts.push({label: 'Father', phone: d.fatherPhone});
+      if (d.motherPhone)   contacts.push({label: 'Mother', phone: d.motherPhone});
+      if (d.guardianPhone) contacts.push({label: 'Guardian', phone: d.guardianPhone});
+
+      var cDiv = document.getElementById('modal-parent-contacts');
+      var noDiv = document.getElementById('modal-no-contact');
+      if (contacts.length > 0) {
+        cDiv.innerHTML = contacts.map(function(c) {
+          return '<div style="margin-bottom:6px;">' +
+            '<span style="color:#78350f;font-size:0.78rem;min-width:100px;display:inline-block;">' + c.label + ':</span> ' +
+            '<a href="tel:' + c.phone + '" style="font-weight:700;color:#92400e;font-size:1rem;">' +
+            '<i class="fas fa-phone"></i> ' + c.phone + '</a></div>';
+        }).join('');
+        cDiv.style.display = 'block';
+        noDiv.style.display = 'none';
+      } else {
+        cDiv.style.display = 'none';
+        noDiv.style.display = 'block';
+      }
+
+      document.getElementById('approveModal').classList.add('active');
+    });
+  });
+
+  document.querySelectorAll('[data-reject-id]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var modal = document.getElementById('rejectModal');
+      modal.querySelector('[name="permission_id"]').value = btn.dataset.rejectId;
+      modal.querySelector('.modal-student-name').textContent = btn.dataset.studentName;
+      modal.classList.add('active');
+    });
+  });
+
+  document.querySelectorAll('[data-modal-close]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      btn.closest('.modal-backdrop').classList.remove('active');
+    });
+  });
+});
+</script>
+{% endblock %}
+
+{% endblock %}
