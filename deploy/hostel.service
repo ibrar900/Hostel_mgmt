@@ -1,0 +1,38 @@
+[Unit]
+Description=HKBK Hostel Management System
+After=network.target
+
+[Service]
+# Run as user 'ibrar'. Change 'ibrar' to your actual username
+User=ibrar
+Group=ibrar
+WorkingDirectory=/home/ibrar/Documents/hostel_mgmt
+
+# Python path
+Environment="PATH=/usr/local/bin:/usr/bin:/bin"
+
+# Use gunicorn as the WSGI server
+# --bind 0.0.0.0:5050  → Listen on all network interfaces (LAN accessible)
+# --workers 3          → Number of worker processes (2x CPU cores + 1)
+# --timeout 120        → Request timeout in seconds
+# --access-logfile     → Access logs
+# --error-logfile      → Error logs
+ExecStart=/usr/local/bin/gunicorn \
+    --bind 0.0.0.0:5050 \
+    --workers 3 \
+    --timeout 120 \
+    --access-logfile /home/ibrar/Documents/hostel_mgmt/logs/access.log \
+    --error-logfile /home/ibrar/Documents/hostel_mgmt/logs/error.log \
+    --capture-output \
+    wsgi:application
+
+# Restart policy
+Restart=always
+RestartSec=5
+
+# Logging
+StandardOutput=append:/home/ibrar/Documents/hostel_mgmt/logs/hostel.log
+StandardError=append:/home/ibrar/Documents/hostel_mgmt/logs/hostel.log
+
+[Install]
+WantedBy=multi-user.target
