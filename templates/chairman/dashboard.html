@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}Chairman Dashboard{% endblock %}
+{% block topbar_title %}Chairman Dashboard{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-tachometer-alt" style="color:var(--accent);margin-right:10px;"></i>Chairman Overview</h1>
+  <div class="breadcrumb">
+    <i class="fas fa-calendar-alt"></i>
+    <span>{{ today or 'Today' }}</span>
+  </div>
+</div>
+
+<!-- Overall quick stats -->
+<div class="stats-grid" style="margin-bottom:28px;">
+  <div class="stat-card navy">
+    <div class="stat-icon"><i class="fas fa-users"></i></div>
+    <div class="stat-label">Total Students</div>
+    <div class="stat-value">{{ overall.total_students or 0 }}</div>
+    <div class="stat-sub">Both hostels</div>
+  </div>
+  <div class="stat-card accent">
+    <div class="stat-icon"><i class="fas fa-user-check"></i></div>
+    <div class="stat-label">Present Today</div>
+    <div class="stat-value">{{ overall.present_today or 0 }}</div>
+    <div class="stat-sub">{{ overall.present_pct or 0 }}% attendance</div>
+  </div>
+  <div class="stat-card gold">
+    <div class="stat-icon"><i class="fas fa-passport"></i></div>
+    <div class="stat-label">Total Permissions</div>
+    <div class="stat-value">{{ overall.total_permissions or 0 }}</div>
+    <div class="stat-sub">{{ overall.pending_permissions or 0 }} pending</div>
+  </div>
+  <div class="stat-card blue">
+    <div class="stat-icon"><i class="fas fa-comment-dots"></i></div>
+    <div class="stat-label">Total Complaints</div>
+    <div class="stat-value">{{ overall.total_complaints or 0 }}</div>
+    <div class="stat-sub">{{ overall.open_complaints or 0 }} open</div>
+  </div>
+</div>
+
+<!-- Hostel Summaries -->
+<div class="hostel-summary-grid" style="margin-bottom:28px;">
+
+  <!-- Boys Hostel -->
+  <div class="hostel-block">
+    <div class="hostel-block-header boys">
+      <i class="fas fa-male"></i> Boys Hostel
+      {% if boys.hostel_name %}({{ boys.hostel_name }}){% endif %}
+    </div>
+    <div class="hostel-block-body">
+      <div class="hostel-mini-stats">
+        <div class="hostel-mini-stat">
+          <div class="val">{{ boys.total or 0 }}</div>
+          <div class="lbl">Total</div>
+        </div>
+        <div class="hostel-mini-stat">
+          <div class="val" style="color:var(--success);">{{ boys.present or 0 }}</div>
+          <div class="lbl">Present</div>
+        </div>
+        <div class="hostel-mini-stat">
+          <div class="val" style="color:var(--danger);">{{ boys.absent or 0 }}</div>
+          <div class="lbl">Absent</div>
+        </div>
+        <div class="hostel-mini-stat">
+          <div class="val" style="color:var(--warning);">{{ boys.pending_permissions or 0 }}</div>
+          <div class="lbl">Pending Perms</div>
+        </div>
+        <div class="hostel-mini-stat">
+          <div class="val" style="color:var(--danger);">{{ boys.open_complaints or 0 }}</div>
+          <div class="lbl">Open Complaints</div>
+        </div>
+        <div class="hostel-mini-stat" style="position:relative;">
+          <div class="val" style="font-size:0.9rem;color:var(--success);">
+            {{ boys.veg or 0 }}V / <span style="color:var(--danger);">{{ boys.nonveg or 0 }}NV</span>
+          </div>
+          <div class="lbl">Veg / Non-Veg</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Girls Hostel -->
+  <div class="hostel-block">
+    <div class="hostel-block-header girls">
+      <i class="fas fa-female"></i> Girls Hostel
+      {% if girls.hostel_name %}({{ girls.hostel_name }}){% endif %}
+    </div>
+    <div class="hostel-block-body">
+      <div class="hostel-mini-stats">
+        <div class="hostel-mini-stat">
+          <div class="val">{{ girls.total or 0 }}</div>
+          <div class="lbl">Total</div>
+        </div>
+        <div class="hostel-mini-stat">
+          <div class="val" style="color:var(--success);">{{ girls.present or 0 }}</div>
+          <div class="lbl">Present</div>
+        </div>
+        <div class="hostel-mini-stat">
+          <div class="val" style="color:var(--danger);">{{ girls.absent or 0 }}</div>
+          <div class="lbl">Absent</div>
+        </div>
+        <div class="hostel-mini-stat">
+          <div class="val" style="color:var(--warning);">{{ girls.pending_permissions or 0 }}</div>
+          <div class="lbl">Pending Perms</div>
+        </div>
+        <div class="hostel-mini-stat">
+          <div class="val" style="color:var(--danger);">{{ girls.open_complaints or 0 }}</div>
+          <div class="lbl">Open Complaints</div>
+        </div>
+        <div class="hostel-mini-stat">
+          <div class="val" style="font-size:0.9rem;color:var(--success);">
+            {{ girls.veg or 0 }}V / <span style="color:var(--danger);">{{ girls.nonveg or 0 }}NV</span>
+          </div>
+          <div class="lbl">Veg / Non-Veg</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /.hostel-summary-grid -->
+
+<!-- Charts Row -->
+<div class="grid-2" style="margin-bottom:28px;gap:22px;">
+
+  <!-- Attendance Trend (30 days) -->
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-chart-line"></i> Attendance Trend (30 Days)</h3>
+    </div>
+    <div class="card-body">
+      <div class="chart-container" style="height:260px;">
+        <canvas id="attendanceTrendChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Food Preference Pie -->
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-chart-pie"></i> Food Preference</h3>
+    </div>
+    <div class="card-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div>
+          <div style="font-size:0.78rem;font-weight:600;text-align:center;color:var(--navy);
+                      margin-bottom:8px;">Boys Hostel</div>
+          <div class="chart-container" style="height:150px;">
+            <canvas id="boysFoodChart"></canvas>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:0.78rem;font-weight:600;text-align:center;color:#6a1b9a;
+                      margin-bottom:8px;">Girls Hostel</div>
+          <div class="chart-container" style="height:150px;">
+            <canvas id="girlsFoodChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+/* ─── Attendance Trend Chart ─── */
+const trendLabels = {{ trend_labels | tojson if trend_labels is defined else '[]' }};
+const boysTrend   = {{ boys_trend   | tojson if boys_trend   is defined else '[]' }};
+const girlsTrend  = {{ girls_trend  | tojson if girls_trend  is defined else '[]' }};
+
+new Chart(document.getElementById('attendanceTrendChart'), {
+  type: 'line',
+  data: {
+    labels: trendLabels,
+    datasets: [
+      {
+        label: 'Boys Hostel',
+        data: boysTrend,
+        borderColor: '#1a3a8b',
+        backgroundColor: 'rgba(26,58,139,0.08)',
+        tension: 0.4,
+        fill: true,
+        pointRadius: 3,
+      },
+      {
+        label: 'Girls Hostel',
+        data: girlsTrend,
+        borderColor: '#ab47bc',
+        backgroundColor: 'rgba(171,71,188,0.08)',
+        tension: 0.4,
+        fill: true,
+        pointRadius: 3,
+      },
+    ],
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'top' },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: { font: { family: 'Poppins', size: 11 } },
+        title: { display: true, text: '# Students Present', font: { family: 'Poppins', size: 11 } }
+      },
+      x: {
+        ticks: { font: { family: 'Poppins', size: 10 }, maxTicksLimit: 10 }
+      },
+    },
+  },
+});
+
+/* ─── Boys Food Preference Pie ─── */
+new Chart(document.getElementById('boysFoodChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Veg', 'Non-Veg'],
+    datasets: [{
+      data: [{{ boys.veg or 0 }}, {{ boys.nonveg or 0 }}],
+      backgroundColor: ['#c8e6c9', '#ffcdd2'],
+      borderColor: ['#43a047', '#e53935'],
+      borderWidth: 2,
+    }],
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { font: { family: 'Poppins', size: 11 }, padding: 8 } },
+    },
+    cutout: '60%',
+  },
+});
+
+/* ─── Girls Food Preference Pie ─── */
+new Chart(document.getElementById('girlsFoodChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Veg', 'Non-Veg'],
+    datasets: [{
+      data: [{{ girls.veg or 0 }}, {{ girls.nonveg or 0 }}],
+      backgroundColor: ['#c8e6c9', '#ffcdd2'],
+      borderColor: ['#43a047', '#e53935'],
+      borderWidth: 2,
+    }],
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { font: { family: 'Poppins', size: 11 }, padding: 8 } },
+    },
+    cutout: '60%',
+  },
+});
+</script>
+{% endblock %}
