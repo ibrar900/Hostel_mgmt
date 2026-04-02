@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}All Complaints{% endblock %}
+{% block topbar_title %}Complaints Overview{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-comment-dots" style="color:var(--accent);margin-right:10px;"></i>All Complaints</h1>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid" style="margin-bottom:24px;">
+  <div class="stat-card danger">
+    <div class="stat-icon"><i class="fas fa-exclamation-circle"></i></div>
+    <div class="stat-label">Open</div>
+    <div class="stat-value">{{ stats.open or 0 }}</div>
+  </div>
+  <div class="stat-card gold">
+    <div class="stat-icon"><i class="fas fa-eye"></i></div>
+    <div class="stat-label">Acknowledged</div>
+    <div class="stat-value">{{ stats.acknowledged or 0 }}</div>
+  </div>
+  <div class="stat-card accent">
+    <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+    <div class="stat-label">Resolved</div>
+    <div class="stat-value">{{ stats.resolved or 0 }}</div>
+  </div>
+  <div class="stat-card navy">
+    <div class="stat-icon"><i class="fas fa-list"></i></div>
+    <div class="stat-label">Total</div>
+    <div class="stat-value">{{ (stats.open or 0) + (stats.acknowledged or 0) + (stats.resolved or 0) }}</div>
+  </div>
+</div>
+
+<!-- Filter tabs -->
+<div class="tab-nav">
+  <button onclick="window.location='{{ url_for('chairman.complaints', status='all') }}'"
+          class="{{ 'active' if not status_filter or status_filter == 'all' else '' }}">
+    All
+  </button>
+  <button onclick="window.location='{{ url_for('chairman.complaints', status='open') }}'"
+          class="{{ 'active' if status_filter == 'open' else '' }}">
+    <i class="fas fa-exclamation-circle"></i> Open
+  </button>
+  <button onclick="window.location='{{ url_for('chairman.complaints', status='acknowledged') }}'"
+          class="{{ 'active' if status_filter == 'acknowledged' else '' }}">
+    <i class="fas fa-eye"></i> Acknowledged
+  </button>
+  <button onclick="window.location='{{ url_for('chairman.complaints', status='resolved') }}'"
+          class="{{ 'active' if status_filter == 'resolved' else '' }}">
+    <i class="fas fa-check-circle"></i> Resolved
+  </button>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3>
+      <i class="fas fa-list"></i>
+      Complaints
+      <span style="font-size:0.8rem;font-weight:400;color:var(--text-muted);margin-left:6px;">
+        ({{ complaints | length if complaints else 0 }})
+      </span>
+    </h3>
+    <div class="search-bar">
+      <i class="fas fa-search"></i>
+      <input type="text" placeholder="Search..." data-search-table="complaintsTable" />
+    </div>
+  </div>
+  <div class="card-body no-pad">
+    <div class="table-responsive">
+      <table id="complaintsTable">
+        <thead>
+          <tr>
+            <th>Hostel</th>
+            <th>Student</th>
+            <th>Room</th>
+            <th>Date</th>
+            <th>Meal</th>
+            <th>Category</th>
+            <th>Description</th>
+            <th>Photo</th>
+            <th>Vendor Response</th>
+            <th>Warden Note</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if complaints %}
+            {% for c in complaints %}
+            <tr>
+              <td>
+                <span class="badge"
+                      style="{{ 'background:rgba(13,27,75,0.1);color:var(--navy);' if c.hostel_type == 'boys'
+                                else 'background:rgba(106,27,154,0.1);color:#6a1b9a;' }}">
+                  <i class="fas fa-{{ 'male' if c.hostel_type == 'boys' else 'female' }}"></i>
+                  {{ 'Boys' if c.hostel_type == 'boys' else 'Girls' }}
+                </span>
+              </td>
+              <td><strong>{{ c.student_name }}</strong></td>
+              <td style="font-weight:600;">{{ c.room_number }}</td>
+              <td class="text-small text-muted">{{ c.date }}</td>
+              <td class="text-small">{{ c.meal_type | title }}</td>
+              <td>
+                <span class="badge badge-pending">{{ c.category | title }}</span>
+              </td>
+              <td style="max-width:180px;font-size:0.82rem;">{{ c.description }}</td>
+              <td>
+                {% if c.photo_url %}
+                <a href="{{ url_for('static', filename=c.photo_url) }}" target="_blank">
+                  <img src="{{ url_for('static', filename=c.photo_url) }}"
+                       style="width:48px;height:48px;object-fit:cover;border-radius:4px;border:1px solid #ddd;" />
+                </a>
+                {% else %}—{% endif %}
+              </td>
+              <td style="max-width:160px;font-size:0.82rem;color:var(--text-muted);font-style:italic;">
+                {{ c.vendor_response or '—' }}
+              </td>
+              <td style="max-width:140px;font-size:0.82rem;color:var(--text-muted);font-style:italic;">
+                {{ c.warden_note or '—' }}
+              </td>
+              <td>
+                <span class="badge badge-{{ c.status }}">{{ c.status | title }}</span>
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="11" style="text-align:center;padding:32px;color:var(--text-muted);">
+                No complaints found.
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
