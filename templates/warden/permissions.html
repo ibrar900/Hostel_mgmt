@@ -1,0 +1,43 @@
+{% extends "base.html" %} {% block title %}Permissions{% endblock %} {% block topbar_title %}Permission Requests{% endblock %} {% block content %}
+Permission Requests
+Food is automatically paused when a permission is approved.
+Policy: No out-pass after 7:30 PM. Food is automatically suspended for students on approved permissions.
+Pending {% if pending_count %}{{ pending_count }}{% endif %} Approved Rejected
+{{ (status_filter or 'All') | title }} Permissions ({{ permissions | length if permissions else 0 }} records)
+Search...
+{% if status_filter == 'pending' or not status_filter %} {% endif %} {% if permissions %} {% for p in permissions %} {% set has_parent = p.father_phone or p.mother_phone or p.guardian_phone or p.parent_contact %} {% if status_filter == 'pending' or not status_filter %} {% endif %} {% endfor %} {% else %} {% endif %}
+Student	Room	Type	Dates	Reason	Parent Contact	Status	Actions
+{{ p.student_name }}
+{{ p.usn }} {% if p.student_phone %}
+{{ p.student_phone }} {% endif %}	{{ p.room_number }}	{{ p.permission_type | replace('_', ' ') | title }}	{{ p.from_date }}
+to
+{{ p.to_date }}	{{ p.reason }}	{% if p.parent_contact %}
+Provided:
+{{ p.parent_contact }}
+{% endif %} {% if p.father_phone %}
+Father: {{ p.father_phone }}
+{% endif %} {% if p.mother_phone %}
+Mother: {{ p.mother_phone }}
+{% endif %} {% if p.guardian_phone %}
+Guardian: {{ p.guardian_phone }}
+{% endif %} {% if not has_parent %} Not provided {% endif %}	{{ p.status | title }} {% if p.review_note %}
+{{ p.review_note }}
+{% endif %}	{% if p.status == 'pending' %}
+Approve Reject
+{% else %} — {% endif %}
+No {{ status_filter or '' }} permissions found.
+Approve Permission
+
+Call to Verify — Parent / Guardian Numbers
+Food will be automatically paused for the duration of the permission.
+Note / Remarks (optional) 
+e.g. Parent confirmed via phone...
+Cancel Approve
+Reject Permission
+
+Rejecting permission for:
+
+Reason for Rejection * 
+Provide a reason for rejection...
+Cancel Reject
+{% block scripts %} {% endblock %} {% endblock %}
