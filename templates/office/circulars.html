@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Circulars{% endblock %}
+{% block topbar_title %}Circulars{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-bullhorn" style="color:var(--accent);margin-right:10px;"></i>Circulars</h1>
+</div>
+
+<!-- Publish Form -->
+<div class="card" style="margin-bottom:22px;">
+  <div class="card-header">
+    <h3><i class="fas fa-plus-circle"></i> Publish New Circular</h3>
+  </div>
+  <div class="card-body">
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}" />
+      <div class="form-group">
+        <label class="form-label">Title <span class="required">*</span></label>
+        <input type="text" class="form-control" name="title" placeholder="e.g. Fee Payment Reminder – July 2026" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Content <span class="required">*</span></label>
+        <textarea class="form-control" name="content" rows="5"
+                  placeholder="Write the circular content here..." required></textarea>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">Target Audience</label>
+          <select class="form-select" name="target">
+            <option value="all">All</option>
+            <option value="students">Students Only</option>
+            <option value="boys">Boys Hostel</option>
+            <option value="girls">Girls Hostel</option>
+            <option value="staff">Staff Only</option>
+          </select>
+        </div>
+        <div class="form-group" style="display:flex;align-items:center;gap:10px;padding-top:28px;">
+          <input type="checkbox" id="is_pinned" name="is_pinned" value="1" style="width:16px;height:16px;" />
+          <label for="is_pinned" style="cursor:pointer;">
+            <i class="fas fa-thumbtack" style="color:var(--gold);"></i> Pin this circular
+          </label>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-accent">
+        <i class="fas fa-paper-plane"></i> Publish Circular
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Circulars List -->
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-list"></i> All Circulars</h3>
+  </div>
+  <div class="card-body" style="padding:0;">
+    {% if circulars %}
+    {% for c in circulars %}
+    <div style="padding:16px;border-bottom:1px solid var(--border);
+                {% if not c.is_active %}opacity:0.5;{% endif %}
+                {% if c.is_pinned and c.is_active %}background:#fffde7;{% endif %}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            {% if c.is_pinned and c.is_active %}
+            <i class="fas fa-thumbtack" style="color:var(--gold);"></i>
+            {% endif %}
+            <strong style="font-size:0.95rem;">{{ c.title }}</strong>
+            <span class="badge" style="background:#e3f2fd;color:#1565c0;font-size:0.72rem;">{{ c.target | title }}</span>
+            {% if not c.is_active %}
+            <span class="badge" style="background:#eee;color:#888;font-size:0.72rem;">Inactive</span>
+            {% endif %}
+          </div>
+          <div style="font-size:0.87rem;color:var(--text-secondary);white-space:pre-wrap;margin-bottom:8px;">{{ c.content }}</div>
+          <div style="font-size:0.78rem;color:var(--text-muted);">
+            By {{ c.author }} &middot; {{ c.published_at[:16] if c.published_at else '' }}
+          </div>
+        </div>
+        {% if c.is_active %}
+        <form method="POST" action="{{ url_for('office.delete_circular', cid=c.id) }}" style="margin:0;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}" />
+          <button type="submit" class="btn btn-outline btn-sm"
+                  onclick="return confirm('Deactivate this circular?');">
+            <i class="fas fa-eye-slash"></i>
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div style="padding:28px;text-align:center;color:var(--text-muted);">
+      <i class="fas fa-bullhorn" style="font-size:2rem;display:block;margin-bottom:10px;color:#c5cee0;"></i>
+      No circulars published yet.
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
