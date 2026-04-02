@@ -1,17 +1,113 @@
-{% extends "base.html" %} {% block title %}Full Report{% endblock %} {% block topbar_title %}Full Hostel Report{% endblock %} {% block content %}
-Full Hostel Report
-Print as PDF
-Back
-Total Students
-{{ total_students }}
-Vegetarian
-{{ veg_count }}
-Non-Vegetarian
-{{ nv_count }}
-Student Details — {{ hostel.name }}
-{% for s in students %} {% set due = s.fee_total - s.fee_paid %} {% endfor %}
-#	Name	USN	Room	Semester	City / State	Food	Blood	Fee Status	Mentor	Health Notes	Parent Contact
-{{ loop.index }}	{{ s.name }}	{{ s.usn }}	{{ s.room_number }}	{{ s.semester or '—' }}	{{ s.city or '—' }}{% if s.state %}, {{ s.state }}{% endif %}	{{ 'Veg' if s.food_preference=='veg' else 'NV' }}	{{ s.blood_group or '—' }}	{% if s.fee_total == 0 %} — {% elif due <= 0 %} Paid {% elif s.fee_paid > 0 %} Partial {% else %} Due ₹{{ "%.0f"|format(due) }} {% endif %}	{{ s.mentor_name or '—' }} {% if s.mentor_phone %}
-{{ s.mentor_phone }}{% endif %}	{{ s.health_concerns or '—' }}	{% if s.father_phone %}F: {{ s.father_phone }}
-{% endif %} {% if s.mother_phone %}M: {{ s.mother_phone }}{% endif %} {% if not s.father_phone and not s.mother_phone %}—{% endif %}
+{% extends "base.html" %}
+{% block title %}Full Report{% endblock %}
+{% block topbar_title %}Full Hostel Report{% endblock %}
+
+{% block content %}
+<div class="page-header no-print">
+  <h1><i class="fas fa-file-alt" style="color:var(--accent);margin-right:10px;"></i>Full Hostel Report</h1>
+  <div style="display:flex;gap:10px;">
+    <button class="btn btn-accent" onclick="window.print()">
+      <i class="fas fa-print"></i> Print as PDF
+    </button>
+    <a href="{{ url_for('warden.reports') }}" class="btn btn-outline">
+      <i class="fas fa-arrow-left"></i> Back
+    </a>
+  </div>
+</div>
+
+<!-- Print Header (only shows in print) -->
+<div style="display:none;" class="print-only">
+  <h2 style="text-align:center;">HKBK College of Engineering — Hostel Report</h2>
+  <h3 style="text-align:center;">{{ hostel.name }}</h3>
+  <p style="text-align:center;">Generated on {{ now().strftime('%d-%m-%Y') if now is defined else '' }}</p>
+  <hr/>
+</div>
+
+<!-- Summary -->
+<div class="stats-grid" style="margin-bottom:22px;">
+  <div class="stat-card navy">
+    <div class="stat-icon"><i class="fas fa-users"></i></div>
+    <div class="stat-label">Total Students</div>
+    <div class="stat-value">{{ total_students }}</div>
+  </div>
+  <div class="stat-card success">
+    <div class="stat-icon"><i class="fas fa-leaf"></i></div>
+    <div class="stat-label">Vegetarian</div>
+    <div class="stat-value">{{ veg_count }}</div>
+  </div>
+  <div class="stat-card danger">
+    <div class="stat-icon"><i class="fas fa-drumstick-bite"></i></div>
+    <div class="stat-label">Non-Vegetarian</div>
+    <div class="stat-value">{{ nv_count }}</div>
+  </div>
+</div>
+
+<!-- Student Table -->
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-table"></i> Student Details — {{ hostel.name }}</h3>
+  </div>
+  <div class="card-body no-pad">
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>USN</th>
+            <th>Room</th>
+            <th>Semester</th>
+            <th>City / State</th>
+            <th>Food</th>
+            <th>Blood</th>
+            <th>Fee Status</th>
+            <th>Mentor</th>
+            <th>Health Notes</th>
+            <th>Parent Contact</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in students %}
+          {% set due = s.fee_total - s.fee_paid %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td><strong>{{ s.name }}</strong></td>
+            <td style="font-size:0.82rem;">{{ s.usn }}</td>
+            <td>{{ s.room_number }}</td>
+            <td>{{ s.semester or '—' }}</td>
+            <td style="font-size:0.82rem;">{{ s.city or '—' }}{% if s.state %}, {{ s.state }}{% endif %}</td>
+            <td>
+              <span class="badge {{ 'badge-veg' if s.food_preference == 'veg' else 'badge-nonveg' }}">
+                {{ 'Veg' if s.food_preference=='veg' else 'NV' }}
+              </span>
+            </td>
+            <td>{{ s.blood_group or '—' }}</td>
+            <td>
+              {% if s.fee_total == 0 %}
+                <span style="color:#888;">—</span>
+              {% elif due <= 0 %}
+                <span style="color:var(--success);font-weight:600;">Paid</span>
+              {% elif s.fee_paid > 0 %}
+                <span style="color:var(--gold);font-weight:600;">Partial</span>
+              {% else %}
+                <span style="color:var(--danger);font-weight:600;">Due &#8377;{{ "%.0f"|format(due) }}</span>
+              {% endif %}
+            </td>
+            <td style="font-size:0.82rem;">
+              {{ s.mentor_name or '—' }}
+              {% if s.mentor_phone %}<br/><span style="color:var(--text-muted);">{{ s.mentor_phone }}</span>{% endif %}
+            </td>
+            <td style="font-size:0.82rem;max-width:140px;">{{ s.health_concerns or '—' }}</td>
+            <td style="font-size:0.82rem;">
+              {% if s.father_phone %}F: {{ s.father_phone }}<br/>{% endif %}
+              {% if s.mother_phone %}M: {{ s.mother_phone }}{% endif %}
+              {% if not s.father_phone and not s.mother_phone %}—{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
 {% endblock %}
