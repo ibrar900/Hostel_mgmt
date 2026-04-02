@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login – HKBK Hostel Management</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <!-- App CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+
+<div class="login-page">
+  <div class="login-card">
+
+    <!-- Header -->
+    <div class="login-card-header">
+      <div class="login-logo">
+        <i class="fas fa-building"></i>
+      </div>
+      <div class="login-title">HKBK College of Engineering</div>
+      <div class="login-subtitle">Hostel Management System</div>
+    </div>
+
+    <!-- Body -->
+    <div class="login-card-body">
+
+      <!-- Flash error messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category in ('error','danger') else category }}"
+                 style="margin-bottom:16px;">
+              <i class="fas fa-exclamation-circle"></i>
+              {{ message }}
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <form method="POST" action="{{ url_for('auth.login') }}">
+        <input type="hidden" name="csrf_token"
+               value="{{ csrf_token() if csrf_token is defined else '' }}" />
+
+        <!-- Username -->
+        <div class="form-group">
+          <label class="form-label" for="username">
+            <i class="fas fa-user" style="color:var(--text-muted);margin-right:4px;"></i>
+            Username
+          </label>
+          <input
+            type="text"
+            class="form-control"
+            id="username"
+            name="username"
+            placeholder="Enter your username or USN"
+            value="{{ request.form.get('username', '') }}"
+            autocomplete="username"
+            required
+            autofocus
+          />
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label class="form-label" for="password">
+            <i class="fas fa-lock" style="color:var(--text-muted);margin-right:4px;"></i>
+            Password
+          </label>
+          <div style="position:relative;">
+            <input
+              type="password"
+              class="form-control"
+              id="password"
+              name="password"
+              placeholder="Enter your password"
+              autocomplete="current-password"
+              required
+              style="padding-right:40px;"
+            />
+            <button type="button"
+                    onclick="togglePassword()"
+                    style="position:absolute;right:10px;top:50%;transform:translateY(-50%);
+                           background:none;border:none;cursor:pointer;color:var(--text-muted);
+                           font-size:0.9rem;"
+                    id="togglePwdBtn"
+                    tabindex="-1"
+                    aria-label="Show/hide password">
+              <i class="fas fa-eye" id="eyeIcon"></i>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-navy btn-block btn-lg" style="margin-top:8px;">
+          <i class="fas fa-sign-in-alt"></i> Sign In
+        </button>
+      </form>
+
+      <!-- Role hint -->
+      <div class="login-hint">
+        <i class="fas fa-info-circle" style="color:var(--info);margin-right:5px;"></i>
+        <strong>Students:</strong> Username is your full USN
+        (e.g. <code>1HK23AI001</code>) or last 4 digits of USN.<br/>
+        Default password is set by the warden on first account creation.
+      </div>
+
+    </div><!-- /.login-card-body -->
+
+  </div><!-- /.login-card -->
+</div><!-- /.login-page -->
+
+<script>
+  function togglePassword() {
+    const pwd = document.getElementById('password');
+    const icon = document.getElementById('eyeIcon');
+    if (pwd.type === 'password') {
+      pwd.type = 'text';
+      icon.className = 'fas fa-eye-slash';
+    } else {
+      pwd.type = 'password';
+      icon.className = 'fas fa-eye';
+    }
+  }
+</script>
+
+</body>
+</html>
