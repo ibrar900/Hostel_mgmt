@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}Complaints{% endblock %}
+{% block topbar_title %}Complaints Overview{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-comment-dots" style="color:var(--accent);margin-right:10px;"></i>Complaints</h1>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid" style="margin-bottom:22px;">
+  <div class="stat-card danger">
+    <div class="stat-icon"><i class="fas fa-exclamation-circle"></i></div>
+    <div class="stat-label">Open</div>
+    <div class="stat-value">{{ stats.open or 0 }}</div>
+  </div>
+  <div class="stat-card gold">
+    <div class="stat-icon"><i class="fas fa-eye"></i></div>
+    <div class="stat-label">Acknowledged</div>
+    <div class="stat-value">{{ stats.acknowledged or 0 }}</div>
+  </div>
+  <div class="stat-card accent">
+    <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+    <div class="stat-label">Resolved</div>
+    <div class="stat-value">{{ stats.resolved or 0 }}</div>
+  </div>
+  <div class="stat-card navy">
+    <div class="stat-icon"><i class="fas fa-list"></i></div>
+    <div class="stat-label">Total</div>
+    <div class="stat-value">{{ (stats.open or 0) + (stats.acknowledged or 0) + (stats.resolved or 0) }}</div>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="card no-print" style="margin-bottom:18px;">
+  <div class="card-body">
+    <form method="GET" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">Status</label>
+        <select class="form-select" name="status">
+          <option value="all"          {{ 'selected' if status_filter == 'all'          else '' }}>All</option>
+          <option value="open"         {{ 'selected' if status_filter == 'open'         else '' }}>Open</option>
+          <option value="acknowledged" {{ 'selected' if status_filter == 'acknowledged' else '' }}>Acknowledged</option>
+          <option value="resolved"     {{ 'selected' if status_filter == 'resolved'     else '' }}>Resolved</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">Category</label>
+        <select class="form-select" name="category">
+          <option value="all"          {{ 'selected' if cat_filter == 'all'          else '' }}>All</option>
+          <option value="quality"      {{ 'selected' if cat_filter == 'quality'      else '' }}>Food Quality</option>
+          <option value="quantity"     {{ 'selected' if cat_filter == 'quantity'     else '' }}>Food Quantity</option>
+          <option value="hygiene"      {{ 'selected' if cat_filter == 'hygiene'      else '' }}>Hygiene</option>
+          <option value="service"      {{ 'selected' if cat_filter == 'service'      else '' }}>Service</option>
+          <option value="maintenance"  {{ 'selected' if cat_filter == 'maintenance'  else '' }}>Maintenance</option>
+          <option value="fees_payment" {{ 'selected' if cat_filter == 'fees_payment' else '' }}>Fees Payment</option>
+          <option value="other"        {{ 'selected' if cat_filter == 'other'        else '' }}>Other</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">Hostel</label>
+        <select class="form-select" name="hostel">
+          <option value="all" {{ 'selected' if hfilter == 'all' else '' }}>All</option>
+          <option value="B"   {{ 'selected' if hfilter == 'B'   else '' }}>Boys</option>
+          <option value="G"   {{ 'selected' if hfilter == 'G'   else '' }}>Girls</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-navy" style="margin-bottom:0;">
+        <i class="fas fa-filter"></i> Filter
+      </button>
+      <a href="{{ url_for('office.complaints') }}" class="btn btn-outline" style="margin-bottom:0;">
+        <i class="fas fa-redo"></i> Reset
+      </a>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3>
+      <i class="fas fa-list"></i> Complaints
+      <span style="font-size:0.8rem;font-weight:400;color:var(--text-muted);margin-left:6px;">({{ complaints | length }})</span>
+    </h3>
+    <div class="search-bar">
+      <i class="fas fa-search"></i>
+      <input type="text" placeholder="Search..." data-search-table="complaintsTable" />
+    </div>
+  </div>
+  <div class="card-body no-pad">
+    <div class="table-responsive">
+      <table id="complaintsTable">
+        <thead>
+          <tr>
+            <th>Hostel</th>
+            <th>Student</th>
+            <th>Room</th>
+            <th>Date</th>
+            <th>Category</th>
+            <th>Description</th>
+            <th>Photo</th>
+            <th>Warden Note</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if complaints %}
+            {% for c in complaints %}
+            <tr>
+              <td>
+                {% if c.hostel_code %}
+                <span class="badge" style="{{ 'background:rgba(13,27,75,0.1);color:var(--navy);' if c.hostel_code == 'B' else 'background:rgba(106,27,154,0.1);color:#6a1b9a;' }}">
+                  {{ 'Boys' if c.hostel_code == 'B' else 'Girls' }}
+                </span>
+                {% else %}—{% endif %}
+              </td>
+              <td><strong>{{ c.student_name }}</strong><br/><code style="font-size:0.78rem;">{{ c.usn }}</code></td>
+              <td style="font-weight:600;">{{ c.room_number or '—' }}</td>
+              <td class="text-small text-muted">{{ c.meal_date }}</td>
+              <td><span class="badge badge-pending">{{ c.category | replace('_',' ') | title }}</span></td>
+              <td style="max-width:180px;font-size:0.82rem;">{{ c.description }}</td>
+              <td>
+                {% if c.photo_url %}
+                <a href="{{ url_for('static', filename=c.photo_url) }}" target="_blank">
+                  <img src="{{ url_for('static', filename=c.photo_url) }}"
+                       style="width:48px;height:48px;object-fit:cover;border-radius:4px;border:1px solid #ddd;" />
+                </a>
+                {% else %}—{% endif %}
+              </td>
+              <td style="max-width:140px;font-size:0.82rem;color:var(--text-muted);">{{ c.warden_note or '—' }}</td>
+              <td><span class="badge badge-{{ c.status }}">{{ c.status | title }}</span></td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="9" style="text-align:center;padding:32px;color:var(--text-muted);">
+                No complaints found.
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
