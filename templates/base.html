@@ -1,14 +1,337 @@
-{% block head %}{% endblock %}
-HKBK College Hostel Management
-{% if session.role == 'student' %} Student  Dashboard  Attendance  Permissions  Food & Menu  Complaints  Movement Log  Circulars  Rules & Protocols  My Profile {% elif session.role in ('warden_boys', 'warden_girls') %} {{ 'Boys' if session.role == 'warden_boys' else 'Girls' }} Hostel  Dashboard  Students  Rooms  Attendance  Permissions  Complaints  Menu  Movement Log  Fees  Parent Visits  Circulars  Reports  Full Report  Protocols  My Profile {% elif session.role == 'office' %} Accounts / Office  Dashboard  Students  Fees  Notifications  Circulars  Complaints  Reports  My Profile {% elif session.role == 'vendor' %} Vendor  Dashboard  Menu Management  Complaints {% elif session.role == 'chairman' %} Administration  Dashboard  Students  Permissions  Complaints  Reports  User Management  Circulars  My Profile {% endif %} Account  Change Password
- No out-pass after 7:30 PM
- {% block topbar_title %}HKBK Hostel Management System{% endblock %}
-{{ (session.username or 'U')[0:1] | upper }}
-{{ session.name or session.username }} {{ (session.role or '').replace('_', ' ').title() }}
- Logout
-{% with messages = get_flashed_messages(with_categories=true) %} {% if messages %}
-{% for category, message in messages %}
- {{ message }} 
-{% endfor %}
-{% endif %} {% endwith %} {% block content %}{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Hostel Management{% endblock %} – HKBK College</title>
+
+  <!-- Google Fonts: Poppins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <!-- App CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <style>
+  @media print {
+    .sidebar, .sidebar-overlay, .topbar, .btn, .btn-sm,
+    .no-print, form, .tab-nav, .search-bar, .modal-backdrop { display: none !important; }
+    .main-wrapper { margin: 0 !important; }
+    .page-content { padding: 0 !important; }
+    body { background: white !important; font-size: 11pt; }
+    .card { box-shadow: none !important; border: 1px solid #ccc; }
+    table { font-size: 10pt; }
+    a { color: inherit !important; text-decoration: none !important; }
+  }
+  </style>
+
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+<!-- Sidebar Overlay (mobile) -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- ============================================================
+     SIDEBAR
+============================================================ -->
+<aside class="sidebar" id="sidebar">
+
+  <!-- Brand -->
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-icon">
+      <i class="fas fa-building"></i>
+    </div>
+    <div class="sidebar-brand-text">
+      <span class="sidebar-brand-title">HKBK College</span>
+      <span class="sidebar-brand-sub">Hostel Management</span>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="sidebar-nav">
+
+    {% if session.role == 'student' %}
+    <!-- ─── Student Nav ─── -->
+    <span class="nav-section-title">Student</span>
+    <a href="{{ url_for('student.dashboard') }}"
+       class="{{ 'active' if request.endpoint == 'student.dashboard' else '' }}">
+      <i class="fas fa-home"></i> Dashboard
+    </a>
+    <a href="{{ url_for('student.attendance') }}"
+       class="{{ 'active' if request.endpoint == 'student.attendance' else '' }}">
+      <i class="fas fa-calendar-check"></i> Attendance
+    </a>
+    <a href="{{ url_for('student.permissions') }}"
+       class="{{ 'active' if request.endpoint == 'student.permissions' else '' }}">
+      <i class="fas fa-passport"></i> Permissions
+    </a>
+    <a href="{{ url_for('student.food') }}"
+       class="{{ 'active' if request.endpoint == 'student.food' else '' }}">
+      <i class="fas fa-utensils"></i> Food &amp; Menu
+    </a>
+    <a href="{{ url_for('student.complaints') }}"
+       class="{{ 'active' if request.endpoint == 'student.complaints' else '' }}">
+      <i class="fas fa-comment-dots"></i> Complaints
+    </a>
+    <a href="{{ url_for('student.movement') }}"
+       class="{{ 'active' if request.endpoint == 'student.movement' else '' }}">
+      <i class="fas fa-walking"></i> Movement Log
+    </a>
+    <a href="{{ url_for('student.circulars') }}"
+       class="{{ 'active' if request.endpoint == 'student.circulars' else '' }}">
+      <i class="fas fa-bullhorn"></i> Circulars
+    </a>
+    <a href="{{ url_for('student.protocols') }}"
+       class="{{ 'active' if request.endpoint == 'student.protocols' else '' }}">
+      <i class="fas fa-shield-alt"></i> Rules &amp; Protocols
+    </a>
+    <a href="{{ url_for('student.profile') }}"
+       class="{{ 'active' if request.endpoint == 'student.profile' else '' }}">
+      <i class="fas fa-user-circle"></i> My Profile
+    </a>
+
+    {% elif session.role in ('warden_boys', 'warden_girls') %}
+    <!-- ─── Warden Nav ─── -->
+    <span class="nav-section-title">
+      {{ 'Boys' if session.role == 'warden_boys' else 'Girls' }} Hostel
+    </span>
+    <a href="{{ url_for('warden.dashboard') }}"
+       class="{{ 'active' if request.endpoint == 'warden.dashboard' else '' }}">
+      <i class="fas fa-tachometer-alt"></i> Dashboard
+    </a>
+    <a href="{{ url_for('warden.students') }}"
+       class="{{ 'active' if 'students' in request.endpoint else '' }}">
+      <i class="fas fa-users"></i> Students
+    </a>
+    <a href="{{ url_for('warden.rooms') }}"
+       class="{{ 'active' if request.endpoint == 'warden.rooms' else '' }}">
+      <i class="fas fa-door-open"></i> Rooms
+    </a>
+    <a href="{{ url_for('warden.attendance') }}"
+       class="{{ 'active' if request.endpoint == 'warden.attendance' else '' }}">
+      <i class="fas fa-calendar-check"></i> Attendance
+    </a>
+    <a href="{{ url_for('warden.permissions') }}"
+       class="{{ 'active' if request.endpoint == 'warden.permissions' else '' }}">
+      <i class="fas fa-passport"></i> Permissions
+    </a>
+    <a href="{{ url_for('warden.complaints') }}"
+       class="{{ 'active' if request.endpoint == 'warden.complaints' else '' }}">
+      <i class="fas fa-comment-dots"></i> Complaints
+    </a>
+    <a href="{{ url_for('warden.menu') }}"
+       class="{{ 'active' if request.endpoint == 'warden.menu' else '' }}">
+      <i class="fas fa-utensils"></i> Menu
+    </a>
+    <a href="{{ url_for('warden.movement') }}"
+       class="{{ 'active' if request.endpoint == 'warden.movement' else '' }}">
+      <i class="fas fa-walking"></i> Movement Log
+    </a>
+    <a href="{{ url_for('warden.fees') }}"
+       class="{{ 'active' if request.endpoint == 'warden.fees' else '' }}">
+      <i class="fas fa-rupee-sign"></i> Fees
+    </a>
+    <a href="{{ url_for('warden.visits') }}"
+       class="{{ 'active' if request.endpoint == 'warden.visits' else '' }}">
+      <i class="fas fa-user-friends"></i> Parent Visits
+    </a>
+    <a href="{{ url_for('warden.circulars') }}"
+       class="{{ 'active' if request.endpoint == 'warden.circulars' else '' }}">
+      <i class="fas fa-bullhorn"></i> Circulars
+    </a>
+    <a href="{{ url_for('warden.reports') }}"
+       class="{{ 'active' if request.endpoint == 'warden.reports' else '' }}">
+      <i class="fas fa-chart-bar"></i> Reports
+    </a>
+    <a href="{{ url_for('warden.full_report') }}"
+       class="{{ 'active' if request.endpoint == 'warden.full_report' else '' }}">
+      <i class="fas fa-file-alt"></i> Full Report
+    </a>
+    <a href="{{ url_for('warden.protocols') }}"
+       class="{{ 'active' if request.endpoint == 'warden.protocols' else '' }}">
+      <i class="fas fa-shield-alt"></i> Protocols
+    </a>
+    <a href="{{ url_for('warden.profile') }}"
+       class="{{ 'active' if request.endpoint == 'warden.profile' else '' }}">
+      <i class="fas fa-user-circle"></i> My Profile
+    </a>
+
+    {% elif session.role == 'office' %}
+    <!-- ─── Office / Accounts Nav ─── -->
+    <span class="nav-section-title">Accounts / Office</span>
+    <a href="{{ url_for('office.dashboard') }}"
+       class="{{ 'active' if request.endpoint == 'office.dashboard' else '' }}">
+      <i class="fas fa-tachometer-alt"></i> Dashboard
+    </a>
+    <a href="{{ url_for('office.students') }}"
+       class="{{ 'active' if request.endpoint == 'office.students' else '' }}">
+      <i class="fas fa-users"></i> Students
+    </a>
+    <a href="{{ url_for('office.fees') }}"
+       class="{{ 'active' if request.endpoint == 'office.fees' else '' }}">
+      <i class="fas fa-rupee-sign"></i> Fees
+    </a>
+    <a href="{{ url_for('office.notifications') }}"
+       class="{{ 'active' if request.endpoint == 'office.notifications' else '' }}">
+      <i class="fas fa-bell"></i> Notifications
+    </a>
+    <a href="{{ url_for('office.circulars') }}"
+       class="{{ 'active' if request.endpoint == 'office.circulars' else '' }}">
+      <i class="fas fa-bullhorn"></i> Circulars
+    </a>
+    <a href="{{ url_for('office.complaints') }}"
+       class="{{ 'active' if request.endpoint == 'office.complaints' else '' }}">
+      <i class="fas fa-comment-dots"></i> Complaints
+    </a>
+    <a href="{{ url_for('office.reports') }}"
+       class="{{ 'active' if request.endpoint == 'office.reports' else '' }}">
+      <i class="fas fa-chart-bar"></i> Reports
+    </a>
+    <a href="{{ url_for('office.profile') }}"
+       class="{{ 'active' if request.endpoint == 'office.profile' else '' }}">
+      <i class="fas fa-user-circle"></i> My Profile
+    </a>
+
+    {% elif session.role == 'vendor' %}
+    <!-- ─── Vendor Nav ─── -->
+    <span class="nav-section-title">Vendor</span>
+    <a href="{{ url_for('vendor.dashboard') }}"
+       class="{{ 'active' if request.endpoint == 'vendor.dashboard' else '' }}">
+      <i class="fas fa-tachometer-alt"></i> Dashboard
+    </a>
+    <a href="{{ url_for('vendor.menu') }}"
+       class="{{ 'active' if request.endpoint == 'vendor.menu' else '' }}">
+      <i class="fas fa-clipboard-list"></i> Menu Management
+    </a>
+    <a href="{{ url_for('vendor.complaints') }}"
+       class="{{ 'active' if request.endpoint == 'vendor.complaints' else '' }}">
+      <i class="fas fa-comment-dots"></i> Complaints
+    </a>
+
+    {% elif session.role == 'chairman' %}
+    <!-- ─── Chairman Nav ─── -->
+    <span class="nav-section-title">Administration</span>
+    <a href="{{ url_for('chairman.dashboard') }}"
+       class="{{ 'active' if request.endpoint == 'chairman.dashboard' else '' }}">
+      <i class="fas fa-tachometer-alt"></i> Dashboard
+    </a>
+    <a href="{{ url_for('chairman.students') }}"
+       class="{{ 'active' if 'students' in request.endpoint else '' }}">
+      <i class="fas fa-users"></i> Students
+    </a>
+    <a href="{{ url_for('chairman.permissions') }}"
+       class="{{ 'active' if request.endpoint == 'chairman.permissions' else '' }}">
+      <i class="fas fa-passport"></i> Permissions
+    </a>
+    <a href="{{ url_for('chairman.complaints') }}"
+       class="{{ 'active' if request.endpoint == 'chairman.complaints' else '' }}">
+      <i class="fas fa-comment-dots"></i> Complaints
+    </a>
+    <a href="{{ url_for('chairman.reports') }}"
+       class="{{ 'active' if request.endpoint == 'chairman.reports' else '' }}">
+      <i class="fas fa-chart-bar"></i> Reports
+    </a>
+    <a href="{{ url_for('chairman.users') }}"
+       class="{{ 'active' if request.endpoint == 'chairman.users' else '' }}">
+      <i class="fas fa-user-cog"></i> User Management
+    </a>
+    <a href="{{ url_for('chairman.circulars') }}"
+       class="{{ 'active' if request.endpoint == 'chairman.circulars' else '' }}">
+      <i class="fas fa-bullhorn"></i> Circulars
+    </a>
+    <a href="{{ url_for('chairman.profile') }}"
+       class="{{ 'active' if request.endpoint == 'chairman.profile' else '' }}">
+      <i class="fas fa-user-circle"></i> My Profile
+    </a>
+    {% endif %}
+
+    <!-- Change Password (all roles) -->
+    <span class="nav-section-title" style="margin-top:10px;">Account</span>
+    <a href="{{ url_for('auth.change_password') }}"
+       class="{{ 'active' if request.endpoint == 'auth.change_password' else '' }}">
+      <i class="fas fa-key"></i> Change Password
+    </a>
+
+  </nav>
+
+  <!-- Sidebar Footer: cut-off notice -->
+  <div class="sidebar-footer">
+    <div class="cutoff-notice">
+      <i class="fas fa-clock"></i>
+      <span>No out-pass after <strong>7:30 PM</strong></span>
+    </div>
+  </div>
+
+</aside>
+
+<!-- ============================================================
+     MAIN WRAPPER
+============================================================ -->
+<div class="main-wrapper">
+
+  <!-- Top Navbar -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+        <i class="fas fa-bars"></i>
+      </button>
+      <span class="topbar-title">
+        {% block topbar_title %}HKBK Hostel Management System{% endblock %}
+      </span>
+    </div>
+
+    <div class="topbar-right">
+      <div class="topbar-user">
+        <div class="avatar">
+          {{ (session.username or 'U')[0:1] | upper }}
+        </div>
+        <div class="user-info">
+          <span class="user-name">{{ session.name or session.username }}</span>
+          <span class="user-role">{{ (session.role or '').replace('_', ' ').title() }}</span>
+        </div>
+      </div>
+      <form method="POST" action="{{ url_for('auth.logout') }}" style="margin:0;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}" />
+        <button type="submit" class="btn-logout">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </form>
+    </div>
+  </header>
+
+  <!-- Page Content -->
+  <main class="page-content">
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
+              <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-circle' if category in ('danger','error') else 'info-circle' }}"></i>
+              {{ message }}
+              <button class="close-btn" type="button" aria-label="Close">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+
+  </main>
+
+</div><!-- /.main-wrapper -->
+
+<!-- App JS -->
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
 {% block scripts %}{% endblock %}
+
+</body>
+</html>
