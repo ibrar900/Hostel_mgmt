@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Complaints{% endblock %}
+{% block topbar_title %}Complaints{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-comment-dots" style="color:var(--accent);margin-right:10px;"></i>Complaints</h1>
+</div>
+
+<!-- Submit Complaint Form -->
+<div class="card" style="margin-bottom:28px;max-width:680px;">
+  <div class="card-header">
+    <h3><i class="fas fa-plus-circle"></i> Submit a Complaint</h3>
+  </div>
+  <div class="card-body">
+    <form method="POST" action="{{ url_for('student.complaints') }}" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token"
+             value="{{ csrf_token() if csrf_token is defined else '' }}" />
+      <input type="hidden" name="action" value="submit" />
+
+      <div class="form-row-2">
+        <!-- Date -->
+        <div class="form-group">
+          <label class="form-label">Date <span class="required">*</span></label>
+          <input type="date" class="form-control" name="date"
+                 data-default-today required />
+        </div>
+
+        <!-- Meal type -->
+        <div class="form-group">
+          <label class="form-label">Meal / Context <span class="required">*</span></label>
+          <select class="form-select" name="meal_type" required>
+            <option value="">Select</option>
+            <option value="breakfast">Breakfast</option>
+            <option value="lunch">Lunch</option>
+            <option value="dinner">Dinner</option>
+            <option value="general">General</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Category -->
+      <div class="form-group">
+        <label class="form-label">Category <span class="required">*</span></label>
+        <select class="form-select" name="category" required>
+          <option value="">Select Category</option>
+          <optgroup label="Food">
+            <option value="quality">Food Quality</option>
+            <option value="quantity">Food Quantity</option>
+            <option value="hygiene">Hygiene / Cleanliness</option>
+            <option value="service">Service</option>
+          </optgroup>
+          <optgroup label="Hostel">
+            <option value="maintenance">Maintenance / Repairs</option>
+            <option value="fees_payment">Fees &amp; Payment Issue</option>
+          </optgroup>
+          <option value="other">Other</option>
+        </select>
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label class="form-label">Description <span class="required">*</span></label>
+        <textarea class="form-control" name="description" rows="4" required
+                  placeholder="Describe the issue in detail..."></textarea>
+      </div>
+
+      <!-- Photo attachment -->
+      <div class="form-group">
+        <label class="form-label">Attach Photo <span style="font-size:0.8rem;color:var(--text-muted);">(optional)</span></label>
+        <input type="file" class="form-control" name="photo" accept="image/*" />
+        <span class="form-hint">JPG, PNG – max 5 MB</span>
+      </div>
+
+      <button type="submit" class="btn btn-navy">
+        <i class="fas fa-paper-plane"></i> Submit Complaint
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- My Complaints History -->
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-history"></i> My Complaints</h3>
+  </div>
+  <div class="card-body no-pad">
+    {% if complaints %}
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Meal</th>
+            <th>Category</th>
+            <th>Description</th>
+            <th>Photo</th>
+            <th>Vendor Response</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in complaints %}
+          <tr>
+            <td class="text-small text-muted">{{ c.date }}</td>
+            <td>
+              <span class="badge badge-pending">{{ c.meal_type | title }}</span>
+            </td>
+            <td class="text-small">{{ c.category | title }}</td>
+            <td style="max-width:220px;font-size:0.82rem;">{{ c.description }}</td>
+            <td>
+              {% if c.photo_url %}
+              <a href="{{ url_for('static', filename=c.photo_url) }}" target="_blank">
+                <img src="{{ url_for('static', filename=c.photo_url) }}"
+                     style="width:48px;height:48px;object-fit:cover;border-radius:4px;border:1px solid #ddd;" />
+              </a>
+              {% else %}—{% endif %}
+            </td>
+            <td style="max-width:180px;font-size:0.82rem;color:var(--text-muted);font-style:italic;">
+              {{ c.vendor_response or 'Awaiting response' }}
+            </td>
+            <td>
+              <span class="badge badge-{{ c.status }}">
+                {% if c.status == 'open' %}
+                  <i class="fas fa-exclamation-circle"></i>
+                {% elif c.status == 'acknowledged' %}
+                  <i class="fas fa-eye"></i>
+                {% else %}
+                  <i class="fas fa-check-circle"></i>
+                {% endif %}
+                {{ c.status | title }}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div style="padding:32px;text-align:center;color:var(--text-muted);">
+      <i class="fas fa-smile" style="font-size:2rem;margin-bottom:10px;display:block;color:#c5cee0;"></i>
+      You haven't submitted any complaints yet.
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}
