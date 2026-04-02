@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}User Management{% endblock %}
+{% block topbar_title %}User Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-user-cog" style="color:var(--accent);margin-right:10px;"></i>User Management</h1>
+</div>
+
+<div class="grid-2" style="gap:24px;align-items:flex-start;">
+
+  <!-- User List -->
+  <div>
+    <div class="card">
+      <div class="card-header">
+        <h3><i class="fas fa-users-cog"></i> System Users</h3>
+        <span style="font-size:0.82rem;color:var(--text-muted);">Non-student accounts</span>
+      </div>
+      <div class="card-body no-pad">
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Name</th>
+                <th>Role</th>
+                <th>Phone</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if users %}
+                {% for u in users %}
+                <tr>
+                  <td>
+                    <code style="font-size:0.82rem;">{{ u.username }}</code>
+                  </td>
+                  <td><strong>{{ u.name }}</strong></td>
+                  <td>
+                    <span class="badge"
+                          style="{% if u.role == 'warden_boys' %}background:rgba(13,27,75,0.1);color:var(--navy);
+                                 {% elif u.role == 'warden_girls' %}background:rgba(106,27,154,0.1);color:#6a1b9a;
+                                 {% elif u.role == 'vendor' %}background:rgba(0,137,123,0.1);color:var(--accent);
+                                 {% elif u.role == 'chairman' %}background:rgba(249,168,37,0.12);color:var(--gold-dark);
+                                 {% else %}background:var(--light);color:var(--text-muted);{% endif %}">
+                      {{ u.role | replace('_', ' ') | title }}
+                    </span>
+                  </td>
+                  <td class="text-small">{{ u.phone or '—' }}</td>
+                  <td>
+                    <span class="badge {{ 'badge-approved' if u.active else 'badge-rejected' }}">
+                      {{ 'Active' if u.active else 'Inactive' }}
+                    </span>
+                  </td>
+                  <td>
+                    <!-- Toggle active status -->
+                    <form method="POST"
+                          action="{{ url_for('chairman.toggle_user', uid=u.id) }}"
+                          style="display:inline;">
+                      <input type="hidden" name="csrf_token"
+                             value="{{ csrf_token() if csrf_token is defined else '' }}" />
+                      <button type="submit"
+                              class="btn {{ 'btn-danger' if u.active else 'btn-success' }} btn-sm toggle-active-btn"
+                              data-confirm="Are you sure you want to {{ 'deactivate' if u.active else 'activate' }} {{ u.username }}?">
+                        <i class="fas fa-{{ 'ban' if u.active else 'check' }}"></i>
+                        {{ 'Deactivate' if u.active else 'Activate' }}
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td colspan="6" style="text-align:center;padding:24px;color:var(--text-muted);">
+                    No users found.
+                  </td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add User Form -->
+  <div>
+    <div class="card">
+      <div class="card-header">
+        <h3><i class="fas fa-user-plus"></i> Add New User</h3>
+      </div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('chairman.add_user') }}">
+          <input type="hidden" name="csrf_token"
+                 value="{{ csrf_token() if csrf_token is defined else '' }}" />
+
+          <div class="form-group">
+            <label class="form-label">Full Name <span class="required">*</span></label>
+            <input type="text" class="form-control" name="name"
+                   placeholder="e.g. Mr. Rajesh Kumar"
+                   value="{{ request.form.get('name', '') }}" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Username <span class="required">*</span></label>
+            <input type="text" class="form-control" name="username"
+                   placeholder="Login username"
+                   value="{{ request.form.get('username', '') }}" required
+                   autocomplete="off" />
+            <span class="form-hint">Must be unique. No spaces allowed.</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Password <span class="required">*</span></label>
+            <input type="password" class="form-control" name="password"
+                   placeholder="Minimum 8 characters"
+                   minlength="8" required
+                   autocomplete="new-password" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Role <span class="required">*</span></label>
+            <select class="form-select" name="role" required>
+              <option value="">Select Role</option>
+              <option value="warden_boys"
+                {{ 'selected' if request.form.get('role') == 'warden_boys' else '' }}>
+                Warden – Boys Hostel
+              </option>
+              <option value="warden_girls"
+                {{ 'selected' if request.form.get('role') == 'warden_girls' else '' }}>
+                Warden – Girls Hostel
+              </option>
+              <option value="vendor"
+                {{ 'selected' if request.form.get('role') == 'vendor' else '' }}>
+                Food Vendor
+              </option>
+              <option value="chairman"
+                {{ 'selected' if request.form.get('role') == 'chairman' else '' }}>
+                Chairman / Admin
+              </option>
+              <option value="office"
+                {{ 'selected' if request.form.get('role') == 'office' else '' }}>
+                Accounts / Office
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Phone</label>
+            <input type="tel" class="form-control" name="phone"
+                   placeholder="10-digit mobile number"
+                   pattern="[6-9][0-9]{9}"
+                   value="{{ request.form.get('phone', '') }}" />
+          </div>
+
+          <div class="divider"></div>
+
+          <button type="submit" class="btn btn-accent btn-block">
+            <i class="fas fa-user-plus"></i> Create User Account
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Reset password card -->
+    <div class="card" style="margin-top:18px;">
+      <div class="card-header">
+        <h3><i class="fas fa-key"></i> Reset User Password</h3>
+      </div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('chairman.reset_password') }}">
+          <input type="hidden" name="csrf_token"
+                 value="{{ csrf_token() if csrf_token is defined else '' }}" />
+          <div class="form-group">
+            <label class="form-label">Select User <span class="required">*</span></label>
+            <select class="form-select" name="user_id" required>
+              <option value="">Select user...</option>
+              {% for u in users %}
+              <option value="{{ u.id }}">{{ u.name }} ({{ u.username }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">New Password <span class="required">*</span></label>
+            <input type="password" class="form-control" name="new_password"
+                   placeholder="New password" minlength="8" required
+                   autocomplete="new-password" />
+          </div>
+          <button type="submit" class="btn btn-blue btn-block">
+            <i class="fas fa-key"></i> Reset Password
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /.grid-2 -->
+
+{% endblock %}
