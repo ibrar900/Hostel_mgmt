@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Food & Menu{% endblock %}
+{% block topbar_title %}Food & Menu{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-utensils" style="color:var(--accent);margin-right:10px;"></i>Food &amp; Menu</h1>
+</div>
+
+<!-- Food Preference Card -->
+<div class="card" style="margin-bottom:24px;max-width:540px;">
+  <div class="card-header">
+    <h3><i class="fas fa-sliders-h"></i> My Food Preference</h3>
+  </div>
+  <div class="card-body">
+    <!-- Current pref display -->
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:18px;">
+      <div style="font-size:2.2rem;">
+        {% if current_pref == 'veg' %}
+          <span style="color:var(--success);">🥦</span>
+        {% else %}
+          <span style="color:var(--danger);">🍗</span>
+        {% endif %}
+      </div>
+      <div>
+        <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:4px;">Current preference</div>
+        <span class="badge {{ 'badge-veg' if current_pref == 'veg' else 'badge-nonveg' }}"
+              style="font-size:0.9rem;padding:5px 16px;">
+          {{ 'Vegetarian' if current_pref == 'veg' else 'Non-Vegetarian' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Toggle form -->
+    <form method="POST" action="{{ url_for('student.food') }}" id="foodToggleForm">
+      <input type="hidden" name="csrf_token"
+             value="{{ csrf_token() if csrf_token is defined else '' }}" />
+      <input type="hidden" name="action" value="change_preference" />
+
+      <div class="form-group">
+        <label class="form-label">Change preference to:</label>
+        <div class="radio-group">
+          <label class="radio-option">
+            <input type="radio" name="food_pref" value="veg"
+                   {{ 'checked' if current_pref == 'veg' else '' }} />
+            <span>
+              <i class="fas fa-leaf" style="color:var(--success);"></i>
+              Vegetarian
+            </span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="food_pref" value="non_veg"
+                   {{ 'checked' if current_pref == 'non_veg' else '' }} />
+            <span>
+              <i class="fas fa-drumstick-bite" style="color:var(--danger);"></i>
+              Non-Vegetarian
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div class="notice-box info" style="margin-bottom:14px;">
+        <i class="fas fa-info-circle"></i>
+        <span>Preference changes take effect from the next meal. Please inform the warden if you need an immediate change.</span>
+      </div>
+
+      <button type="submit" class="btn btn-accent">
+        <i class="fas fa-save"></i> Update Preference
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- This Week's Menu -->
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-calendar-week"></i> This Week's Menu</h3>
+    <span style="font-size:0.82rem;color:var(--text-muted);">
+      Showing menu for your preference:
+      <span class="badge {{ 'badge-veg' if current_pref == 'veg' else 'badge-nonveg' }}">
+        {{ 'Veg' if current_pref == 'veg' else 'Non-Veg' }}
+      </span>
+    </span>
+  </div>
+  <div class="card-body no-pad">
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Day</th>
+            <th>
+              <i class="fas fa-sun" style="color:#f57f17;"></i> Breakfast
+            </th>
+            <th>
+              <i class="fas fa-cloud-sun" style="color:#2e7d32;"></i> Lunch
+            </th>
+            <th>
+              <i class="fas fa-moon" style="color:#1565c0;"></i> Dinner
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if week_menu %}
+            {% for day in week_menu %}
+            <tr {{ 'class="row-success"' if day.is_today else '' | safe }}>
+              <td class="text-small">
+                {{ day.date }}
+                {% if day.is_today %}
+                  <span class="badge badge-approved" style="margin-left:4px;font-size:0.65rem;">Today</span>
+                {% endif %}
+              </td>
+              <td style="font-weight:500;">{{ day.day_name }}</td>
+              <td style="font-size:0.85rem;">
+                {% if current_pref == 'veg' %}
+                  {{ day.breakfast_veg or '—' }}
+                {% else %}
+                  {{ day.breakfast_nonveg or day.breakfast_veg or '—' }}
+                {% endif %}
+              </td>
+              <td style="font-size:0.85rem;">
+                {% if current_pref == 'veg' %}
+                  {{ day.lunch_veg or '—' }}
+                {% else %}
+                  {{ day.lunch_nonveg or day.lunch_veg or '—' }}
+                {% endif %}
+              </td>
+              <td style="font-size:0.85rem;">
+                {% if current_pref == 'veg' %}
+                  {{ day.dinner_veg or '—' }}
+                {% else %}
+                  {{ day.dinner_nonveg or day.dinner_veg or '—' }}
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted);">
+                <i class="fas fa-utensils" style="font-size:2rem;margin-bottom:10px;display:block;color:#c5cee0;"></i>
+                No menu available for this week.
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
