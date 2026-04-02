@@ -1,0 +1,35 @@
+{% extends "base.html" %} {% block title %}Movement Board{% endblock %} {% block topbar_title %}Live Movement Board{% endblock %} {% block content %}
+Movement Board
+Curfew: {{ curfew }}
+In Hostel
+{{ in_hostel|length }}
+Outside
+{{ outside|length }}
+On Leave
+{{ on_leave|length }}
+Currently Outside
+{{ outside|length }}
+{% if outside %}
+{% for m in outside %} {% set out_hm = m.out_time[11:16] if m.out_time|length > 15 else m.out_time %} {% set is_overdue = (is_girls and out_hm > '19:30') or (not is_girls and out_hm > '21:30') %} {% endfor %}
+Student	Room	Out Since	Expected Return	Reason	Action
+{{ m.name }}
+{{ m.usn }}	{{ m.room_number }}	{% if m.out_time|length > 15 %} {{ m.out_time[11:16] }} {% else %} {{ m.out_time }} {% endif %} {% if is_overdue %} OVERDUE {% endif %}	{{ m.expected_return or '—' }}	{{ m.reason }}	
+Mark Returned
+{% else %}
+All students are currently in the hostel.
+{% endif %}
+{% if on_leave %}
+On Approved Leave
+{% for s in on_leave %} {% endfor %}
+Student	Room	Leave Period	Reason
+{{ s.name }}
+{{ s.usn }}	{{ s.room_number }}	{{ s.from_date }} → {{ s.to_date }}	{{ s.reason }}
+{% endif %}
+In Hostel
+{{ in_hostel|length }}
+{% if in_hostel %}
+{% for s in in_hostel %} {% endfor %}
+Student	USN	Room
+{{ s.name }}	{{ s.usn }}	{{ s.room_number }}
+{% endif %}
+{% endblock %}
