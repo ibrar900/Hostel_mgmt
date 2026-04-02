@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Permissions{% endblock %}
+{% block topbar_title %}Permission Requests{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-passport" style="color:var(--accent);margin-right:10px;"></i>Out-Pass / Permissions</h1>
+</div>
+
+<!-- Important notices -->
+<div class="notice-box warning" style="margin-bottom:12px;">
+  <i class="fas fa-clock"></i>
+  <strong>No out-pass after 7:30 PM.</strong>&nbsp;
+  Requests submitted after 7:30 PM will be processed the next morning.
+</div>
+<div class="notice-box info" style="margin-bottom:24px;">
+  <i class="fas fa-info-circle"></i>
+  <span>
+    <strong>Note:</strong> Food will be automatically paused for the duration of your approved absence.
+    Your food preference will resume automatically when you return.
+  </span>
+</div>
+
+<!-- Request Form -->
+<div class="card" style="margin-bottom:28px;max-width:680px;">
+  <div class="card-header">
+    <h3><i class="fas fa-plus-circle"></i> New Permission Request</h3>
+  </div>
+  <div class="card-body">
+    <form method="POST" action="{{ url_for('student.permissions') }}">
+      <input type="hidden" name="csrf_token"
+             value="{{ csrf_token() if csrf_token is defined else '' }}" />
+      <input type="hidden" name="action" value="request" />
+
+      <div class="form-row-2">
+        <!-- Type -->
+        <div class="form-group">
+          <label class="form-label">Permission Type <span class="required">*</span></label>
+          <select class="form-select" name="type" required>
+            <option value="">Select Type</option>
+            <option value="home_visit">Home Visit</option>
+            <option value="medical">Medical</option>
+            <option value="vacation">Vacation</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <!-- From date -->
+        <div class="form-group">
+          <label class="form-label">From Date <span class="required">*</span></label>
+          <input type="date" class="form-control" name="from_date"
+                 data-default-today required />
+        </div>
+      </div>
+
+      <div class="form-row-2">
+        <!-- To date -->
+        <div class="form-group">
+          <label class="form-label">To Date <span class="required">*</span></label>
+          <input type="date" class="form-control" name="to_date"
+                 data-default-today required />
+        </div>
+
+        <!-- Parent contact (optional) -->
+        <div class="form-group">
+          <label class="form-label">Parent/Guardian Contact</label>
+          <input type="tel" class="form-control" name="parent_contact"
+                 placeholder="Contact during absence" />
+        </div>
+      </div>
+
+      <!-- Reason -->
+      <div class="form-group">
+        <label class="form-label">Reason <span class="required">*</span></label>
+        <textarea class="form-control" name="reason" rows="3" required
+                  placeholder="Please provide a detailed reason for your request..."></textarea>
+      </div>
+
+      <div class="notice-box success" style="margin-bottom:16px;">
+        <i class="fas fa-check-circle"></i>
+        <span>Your food will be automatically paused once this permission is approved by the warden.</span>
+      </div>
+
+      <button type="submit" class="btn btn-navy">
+        <i class="fas fa-paper-plane"></i> Submit Request
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Permission History -->
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-history"></i> Permission History</h3>
+  </div>
+  <div class="card-body no-pad">
+    {% if permissions %}
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Reason</th>
+            <th>Status</th>
+            <th>Warden Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in permissions %}
+          <tr>
+            <td>
+              <span class="badge badge-pending">
+                {{ p.type | replace('_', ' ') | title }}
+              </span>
+            </td>
+            <td class="text-small">{{ p.from_date }}</td>
+            <td class="text-small">{{ p.to_date }}</td>
+            <td style="max-width:200px;font-size:0.82rem;">{{ p.reason }}</td>
+            <td>
+              <span class="badge badge-{{ p.status }}">
+                {% if p.status == 'approved' %}
+                  <i class="fas fa-check"></i>
+                {% elif p.status == 'rejected' %}
+                  <i class="fas fa-times"></i>
+                {% else %}
+                  <i class="fas fa-clock"></i>
+                {% endif %}
+                {{ p.status | title }}
+              </span>
+            </td>
+            <td style="font-size:0.82rem;color:var(--text-muted);font-style:italic;">
+              {{ p.warden_note or '—' }}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div style="padding:32px;text-align:center;color:var(--text-muted);">
+      <i class="fas fa-passport" style="font-size:2rem;margin-bottom:10px;display:block;color:#c5cee0;"></i>
+      No permission requests yet.
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}
