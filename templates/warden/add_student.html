@@ -1,29 +1,188 @@
-{% extends "base.html" %} {% block title %}Add Student{% endblock %} {% block topbar_title %}Add Student{% endblock %} {% block content %}
-Add Student
-Back to Students
-New Student Registration
-Personal Information
-Full Name * 
-{{ request.form.get('name', '') }}
-USN (University Seat Number) * 
-{{ request.form.get('usn', '') }}
-Programme * 
-Select Programme
-Email 
-{{ request.form.get('email', '') }}
-Contact Information
-Student Phone * 
-{{ request.form.get('phone', '') }}
-Father's Phone 
-{{ request.form.get('father_phone', '') }}
-Mother's Phone 
-{{ request.form.get('mother_phone', '') }}
-Hostel Details
-Assign Room * 
-Select Available Room
- Room format: B-001 (Boys, Ground Floor, Room 1). 2-sharing rooms.
-Food Preference *
- Vegetarian  Non-Vegetarian
-Register Student
-Cancel
+{% extends "base.html" %}
+
+{% block title %}Add Student{% endblock %}
+{% block topbar_title %}Add Student{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-user-plus" style="color:var(--accent);margin-right:10px;"></i>Add Student</h1>
+  <a href="{{ url_for('warden.students') }}" class="btn btn-outline">
+    <i class="fas fa-arrow-left"></i> Back to Students
+  </a>
+</div>
+
+<div style="max-width:760px;">
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-user-plus"></i> New Student Registration</h3>
+    </div>
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('warden.add_student') }}">
+        <input type="hidden" name="csrf_token"
+               value="{{ csrf_token() if csrf_token is defined else '' }}" />
+
+        <!-- Personal Info -->
+        <h4 style="font-size:0.9rem;color:var(--text-muted);text-transform:uppercase;
+                   letter-spacing:0.05em;margin-bottom:16px;">
+          <i class="fas fa-id-card" style="margin-right:7px;"></i>Personal Information
+        </h4>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label" for="name">
+              Full Name <span class="required">*</span>
+            </label>
+            <input type="text" class="form-control" id="name" name="name"
+                   placeholder="e.g. Akshay Kumar B"
+                   value="{{ request.form.get('name', '') }}" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="usn">
+              USN (University Seat Number) <span class="required">*</span>
+            </label>
+            <input type="text" class="form-control" id="usn" name="usn"
+                   placeholder="e.g. 1HK23AI001"
+                   value="{{ request.form.get('usn', '') }}"
+                   style="text-transform:uppercase;" required />
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label" for="programme">
+              Programme <span class="required">*</span>
+            </label>
+            <select class="form-select" id="programme" name="programme" required>
+              <option value="">Select Programme</option>
+              {% set programmes = ['B.E. Civil Engineering', 'B.E. Mechanical Engineering',
+                                   'B.E. CSE', 'B.E. AIML', 'B.E. ECE', 'B.E. EEE',
+                                   'B.E. ISE', 'B.E. Chemical Engineering',
+                                   'M.Tech. CSE', 'M.Tech. VLSI', 'MBA'] %}
+              {% for prog in programmes %}
+              <option value="{{ prog }}"
+                {{ 'selected' if request.form.get('programme') == prog else '' }}>
+                {{ prog }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="email">Email</label>
+            <input type="email" class="form-control" id="email" name="email"
+                   placeholder="student@hkbk.edu.in"
+                   value="{{ request.form.get('email', '') }}" />
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Contact Info -->
+        <h4 style="font-size:0.9rem;color:var(--text-muted);text-transform:uppercase;
+                   letter-spacing:0.05em;margin-bottom:16px;">
+          <i class="fas fa-phone" style="margin-right:7px;"></i>Contact Information
+        </h4>
+
+        <div class="form-row-3">
+          <div class="form-group">
+            <label class="form-label" for="phone">
+              Student Phone <span class="required">*</span>
+            </label>
+            <input type="tel" class="form-control" id="phone" name="phone"
+                   placeholder="10-digit mobile number"
+                   pattern="[6-9][0-9]{9}"
+                   value="{{ request.form.get('phone', '') }}" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="father_phone">Father's Phone</label>
+            <input type="tel" class="form-control" id="father_phone" name="father_phone"
+                   placeholder="Father's mobile number"
+                   pattern="[6-9][0-9]{9}"
+                   value="{{ request.form.get('father_phone', '') }}" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="mother_phone">Mother's Phone</label>
+            <input type="tel" class="form-control" id="mother_phone" name="mother_phone"
+                   placeholder="Mother's mobile number"
+                   pattern="[6-9][0-9]{9}"
+                   value="{{ request.form.get('mother_phone', '') }}" />
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Hostel Preferences -->
+        <h4 style="font-size:0.9rem;color:var(--text-muted);text-transform:uppercase;
+                   letter-spacing:0.05em;margin-bottom:16px;">
+          <i class="fas fa-building" style="margin-right:7px;"></i>Hostel Details
+        </h4>
+
+        <div class="form-row-2">
+          <!-- Room selector -->
+          <div class="form-group">
+            <label class="form-label" for="room_id">
+              Assign Room <span class="required">*</span>
+            </label>
+            <select class="form-select" id="room_id" name="room_id" required>
+              <option value="">Select Available Room</option>
+              {% if available_rooms %}
+                {% for floor, rooms in available_rooms.items() %}
+                <optgroup label="{{ floor }}">
+                  {% for room in rooms %}
+                  <option value="{{ room.id }}"
+                    {{ 'selected' if request.form.get('room_id')|string == room.id|string else '' }}>
+                    {{ room.number }} – {{ room.available }}/{{ room.capacity }} beds free
+                    {% if room.occupants %} (with {{ room.occupants | join(', ') }}){% endif %}
+                  </option>
+                  {% endfor %}
+                </optgroup>
+                {% endfor %}
+              {% else %}
+                <option value="" disabled>No available rooms</option>
+              {% endif %}
+            </select>
+            <span class="form-hint">Room format: B-001 (Boys, Ground Floor, Room 1). 2-sharing rooms.</span>
+          </div>
+
+          <!-- Food Preference -->
+          <div class="form-group">
+            <label class="form-label">
+              Food Preference <span class="required">*</span>
+            </label>
+            <div class="radio-group" style="margin-top:8px;">
+              <label class="radio-option">
+                <input type="radio" name="food_pref" value="veg"
+                       {{ 'checked' if request.form.get('food_pref','veg') == 'veg' else '' }} required />
+                <span>
+                  <i class="fas fa-leaf" style="color:var(--success);"></i> Vegetarian
+                </span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="food_pref" value="non_veg"
+                       {{ 'checked' if request.form.get('food_pref') == 'non_veg' else '' }} />
+                <span>
+                  <i class="fas fa-drumstick-bite" style="color:var(--danger);"></i> Non-Vegetarian
+                </span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div style="display:flex;gap:12px;margin-top:10px;">
+          <button type="submit" class="btn btn-accent btn-lg">
+            <i class="fas fa-user-plus"></i> Register Student
+          </button>
+          <a href="{{ url_for('warden.students') }}" class="btn btn-outline btn-lg">
+            Cancel
+          </a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
 {% endblock %}
