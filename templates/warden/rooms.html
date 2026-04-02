@@ -1,15 +1,131 @@
-{% extends "base.html" %} {% block title %}Rooms{% endblock %} {% block topbar_title %}Room Occupancy{% endblock %} {% block content %}
-Room Occupancy
-Full
-Partial
-Empty
-Total Rooms
-{{ total_rooms or 0 }}
-Full
-{{ full_rooms or 0 }}
-Partial
-{{ partial_rooms or 0 }}
-Empty
-{{ empty_rooms or 0 }}
-{% set floors = [ ('ground', 'Ground Floor'), ('1st', '1st Floor'), ('2nd', '2nd Floor'), ('3rd', '3rd Floor'), ('4th', '4th Floor'), ('5th', '5th Floor'), ] %} {% for key, label in floors %} {{ label }} {% endfor %}
-{% for key, label in [ ('ground', 'Ground Floor'), ('1st', '1st Floor'), ('2nd', '2nd Floor'), ('3rd', '3rd Floor'), ('4th', '4th Floor'), ('5th', '5th Floor'), ] %} {% endfor %} {% endblock %}
+{% extends "base.html" %}
+
+{% block title %}Rooms{% endblock %}
+{% block topbar_title %}Room Occupancy{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-door-open" style="color:var(--accent);margin-right:10px;"></i>Room Occupancy</h1>
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+    <!-- Legend -->
+    <div style="display:flex;gap:14px;font-size:0.8rem;align-items:center;">
+      <span style="display:flex;align-items:center;gap:5px;">
+        <span style="width:14px;height:14px;border-radius:3px;background:var(--navy);display:inline-block;"></span>
+        Full
+      </span>
+      <span style="display:flex;align-items:center;gap:5px;">
+        <span style="width:14px;height:14px;border-radius:3px;background:var(--blue);display:inline-block;"></span>
+        Partial
+      </span>
+      <span style="display:flex;align-items:center;gap:5px;">
+        <span style="width:14px;height:14px;border-radius:3px;background:#b0bec5;display:inline-block;"></span>
+        Empty
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- Summary row -->
+<div class="stats-grid" style="margin-bottom:22px;">
+  <div class="stat-card navy">
+    <div class="stat-icon"><i class="fas fa-door-open"></i></div>
+    <div class="stat-label">Total Rooms</div>
+    <div class="stat-value">{{ total_rooms or 0 }}</div>
+  </div>
+  <div class="stat-card accent">
+    <div class="stat-icon"><i class="fas fa-check"></i></div>
+    <div class="stat-label">Full</div>
+    <div class="stat-value">{{ full_rooms or 0 }}</div>
+  </div>
+  <div class="stat-card blue">
+    <div class="stat-icon"><i class="fas fa-adjust"></i></div>
+    <div class="stat-label">Partial</div>
+    <div class="stat-value">{{ partial_rooms or 0 }}</div>
+  </div>
+  <div class="stat-card" style="border-top-color:#b0bec5;">
+    <div class="stat-icon" style="background:#eceff1;color:#607d8b;"><i class="fas fa-times"></i></div>
+    <div class="stat-label">Empty</div>
+    <div class="stat-value">{{ empty_rooms or 0 }}</div>
+  </div>
+</div>
+
+<!-- Floor Tabs -->
+<div class="floor-tabs">
+  {% set floors = [
+    ('ground', 'Ground Floor'),
+    ('1st',    '1st Floor'),
+    ('2nd',    '2nd Floor'),
+    ('3rd',    '3rd Floor'),
+    ('4th',    '4th Floor'),
+    ('5th',    '5th Floor'),
+  ] %}
+  {% for key, label in floors %}
+  <button class="floor-tab" data-floor="{{ key }}">{{ label }}</button>
+  {% endfor %}
+</div>
+
+<!-- Floor Sections -->
+{% for key, label in [
+    ('ground', 'Ground Floor'),
+    ('1st',    '1st Floor'),
+    ('2nd',    '2nd Floor'),
+    ('3rd',    '3rd Floor'),
+    ('4th',    '4th Floor'),
+    ('5th',    '5th Floor'),
+] %}
+<div class="floor-section" data-floor="{{ key }}" style="display:none;">
+  <h3 style="font-size:0.95rem;color:var(--text-muted);margin-bottom:16px;font-weight:500;">
+    <i class="fas fa-layer-group" style="margin-right:7px;"></i>{{ label }}
+  </h3>
+
+  {% set floor_rooms = rooms_by_floor[key] if rooms_by_floor is defined and key in rooms_by_floor else [] %}
+
+  {% if floor_rooms %}
+  <div class="room-grid">
+    {% for room in floor_rooms %}
+      {% if room.occupied == room.capacity %}
+        {% set room_class = 'full' %}
+      {% elif room.occupied == 0 %}
+        {% set room_class = 'empty' %}
+      {% else %}
+        {% set room_class = 'partial' %}
+      {% endif %}
+
+      <div class="room-card {{ room_class }}">
+        <div class="room-number">{{ room.number }}</div>
+        <span class="room-bed-count">{{ room.occupied }}/{{ room.capacity }} beds</span>
+
+        <div class="room-occupants">
+          {% if room.occupants %}
+            {% for occ in room.occupants %}
+              <span>
+                <i class="fas fa-user" style="font-size:0.7rem;margin-right:4px;"></i>{{ occ.name }}
+              </span>
+            {% endfor %}
+          {% else %}
+            <span style="color:#90a4ae;font-style:italic;">Vacant</span>
+          {% endif %}
+        </div>
+
+        {% if room_class == 'partial' %}
+        <div style="margin-top:8px;">
+          <a href="{{ url_for('warden.add_student') }}?room={{ room.id }}"
+             class="btn btn-accent btn-sm" style="font-size:0.72rem;padding:3px 10px;">
+            <i class="fas fa-plus"></i> Assign
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div style="padding:32px;text-align:center;color:var(--text-muted);
+              background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);">
+    <i class="fas fa-door-closed" style="font-size:2rem;margin-bottom:10px;display:block;color:#c5cee0;"></i>
+    No rooms on this floor.
+  </div>
+  {% endif %}
+</div>
+{% endfor %}
+
+{% endblock %}
