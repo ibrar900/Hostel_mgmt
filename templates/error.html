@@ -1,0 +1,17 @@
+{% if error_code == 404 %}  {% elif error_code == 403 %}  {% elif error_code == 500 %}  {% else %}  {% endif %}
+{{ error_code or '?' }}
+{% if error_code == 404 %} Page Not Found {% elif error_code == 403 %} Access Denied {% elif error_code == 500 %} Internal Server Error {% elif error_code == 401 %} Unauthorized {% else %} Something Went Wrong {% endif %}
+{% if error_message %} {{ error_message }} {% elif error_code == 404 %} The page you are looking for does not exist or may have been moved. {% elif error_code == 403 %} You do not have permission to access this page. Please contact the administrator. {% elif error_code == 500 %} An unexpected error occurred. Please try again later or contact support. {% elif error_code == 401 %} You need to be logged in to access this page. {% else %} An error occurred while processing your request. {% endif %}
+ Go Back
+{% if session and session.role %} {% if session.role == 'student' %}
+ Go to Dashboard
+{% elif session.role in ('warden_boys', 'warden_girls') %}
+ Go to Dashboard
+{% elif session.role == 'vendor' %}
+ Go to Dashboard
+{% elif session.role == 'chairman' %}
+ Go to Dashboard
+{% endif %} {% else %}
+ Login
+{% endif %}
+HKBK College of Engineering — Hostel Management System
