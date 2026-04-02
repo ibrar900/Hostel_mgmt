@@ -1,14 +1,125 @@
-{% extends "base.html" %} {% block title %}Students{% endblock %} {% block topbar_title %}Students{% endblock %} {% block content %}
-Students
-Add Student
-Student List ({{ total_count or 0 }} students)
-Search by name, USN, room...
-{% if students %} {% for s in students %} {% endfor %} {% else %} {% endif %}
-#	Name	USN	Programme	Room	Food Pref	Status	Actions
-{{ loop.index + ((page-1)*per_page if page is defined else 0) }}	{{ s.name }}
-{{ s.email or '' }}	{{ s.usn }}	{{ s.programme }}	{{ s.room_number }}	{{ 'Veg' if s.food_pref == 'veg' else 'Non-Veg' }}	{{ 'Active' if s.active else 'Inactive' }}	
-No students found. Add the first student
-{% if total_pages is defined and total_pages > 1 %}
-{% for p in range(1, total_pages + 1) %} {{ p }} {% endfor %}
-{% endif %}
+{% extends "base.html" %}
+
+{% block title %}Students{% endblock %}
+{% block topbar_title %}Students{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-users" style="color:var(--accent);margin-right:10px;"></i>Students</h1>
+  <a href="{{ url_for('warden.add_student') }}" class="btn btn-accent">
+    <i class="fas fa-user-plus"></i> Add Student
+  </a>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-list"></i>
+      Student List
+      <span style="font-size:0.8rem;font-weight:400;color:var(--text-muted);margin-left:6px;">
+        ({{ total_count or 0 }} students)
+      </span>
+    </h3>
+    <!-- Search bar -->
+    <div class="search-bar">
+      <i class="fas fa-search"></i>
+      <input
+        type="text"
+        placeholder="Search by name, USN, room..."
+        data-search-table="studentsTable"
+      />
+    </div>
+  </div>
+
+  <div class="card-body no-pad">
+    <div class="table-responsive">
+      <table id="studentsTable">
+        <thead>
+          <tr>
+            <th style="width:40px;">#</th>
+            <th>Name</th>
+            <th>USN</th>
+            <th>Programme</th>
+            <th>Room</th>
+            <th>Food Pref</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if students %}
+            {% for s in students %}
+            <tr>
+              <td class="text-muted text-small">{{ loop.index + ((page-1)*per_page if page is defined else 0) }}</td>
+              <td>
+                <strong>{{ s.name }}</strong><br/>
+                <span class="text-muted text-small">{{ s.email or '' }}</span>
+              </td>
+              <td>
+                <code style="font-size:0.82rem;">{{ s.usn }}</code>
+              </td>
+              <td class="text-small">{{ s.programme }}</td>
+              <td>
+                <span style="font-weight:600;color:var(--navy);">{{ s.room_number }}</span>
+              </td>
+              <td>
+                <span class="badge {{ 'badge-veg' if s.food_pref == 'veg' else 'badge-nonveg' }}">
+                  {{ 'Veg' if s.food_pref == 'veg' else 'Non-Veg' }}
+                </span>
+              </td>
+              <td>
+                <span class="badge {{ 'badge-approved' if s.active else 'badge-rejected' }}">
+                  {{ 'Active' if s.active else 'Inactive' }}
+                </span>
+              </td>
+              <td>
+                <div class="table-actions">
+                  <a href="{{ url_for('warden.student_detail', student_id=s.id) }}"
+                     class="btn btn-outline btn-sm">
+                    <i class="fas fa-eye"></i>
+                  </a>
+                  <a href="{{ url_for('warden.edit_student', student_id=s.id) }}"
+                     class="btn btn-blue btn-sm">
+                    <i class="fas fa-edit"></i>
+                  </a>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="8" style="text-align:center;padding:32px;color:var(--text-muted);">
+                <i class="fas fa-users" style="font-size:2rem;margin-bottom:10px;display:block;color:#c5cee0;"></i>
+                No students found.
+                <a href="{{ url_for('warden.add_student') }}" style="color:var(--accent);">Add the first student</a>
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  {% if total_pages is defined and total_pages > 1 %}
+  <div style="padding:16px 22px;border-top:1px solid var(--border);">
+    <div class="pagination">
+      <a href="{{ url_for('warden.students', page=page-1) }}"
+         class="page-link {{ 'disabled' if page <= 1 else '' }}">
+        <i class="fas fa-chevron-left"></i>
+      </a>
+
+      {% for p in range(1, total_pages + 1) %}
+        <a href="{{ url_for('warden.students', page=p) }}"
+           class="page-link {{ 'active' if p == page else '' }}">{{ p }}</a>
+      {% endfor %}
+
+      <a href="{{ url_for('warden.students', page=page+1) }}"
+         class="page-link {{ 'disabled' if page >= total_pages else '' }}">
+        <i class="fas fa-chevron-right"></i>
+      </a>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
 {% endblock %}
