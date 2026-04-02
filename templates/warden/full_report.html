@@ -1,0 +1,17 @@
+{% extends "base.html" %} {% block title %}Full Report{% endblock %} {% block topbar_title %}Full Hostel Report{% endblock %} {% block content %}
+Full Hostel Report
+Print as PDF
+Back
+Total Students
+{{ total_students }}
+Vegetarian
+{{ veg_count }}
+Non-Vegetarian
+{{ nv_count }}
+Student Details — {{ hostel.name }}
+{% for s in students %} {% set due = s.fee_total - s.fee_paid %} {% endfor %}
+#	Name	USN	Room	Semester	City / State	Food	Blood	Fee Status	Mentor	Health Notes	Parent Contact
+{{ loop.index }}	{{ s.name }}	{{ s.usn }}	{{ s.room_number }}	{{ s.semester or '—' }}	{{ s.city or '—' }}{% if s.state %}, {{ s.state }}{% endif %}	{{ 'Veg' if s.food_preference=='veg' else 'NV' }}	{{ s.blood_group or '—' }}	{% if s.fee_total == 0 %} — {% elif due <= 0 %} Paid {% elif s.fee_paid > 0 %} Partial {% else %} Due ₹{{ "%.0f"|format(due) }} {% endif %}	{{ s.mentor_name or '—' }} {% if s.mentor_phone %}
+{{ s.mentor_phone }}{% endif %}	{{ s.health_concerns or '—' }}	{% if s.father_phone %}F: {{ s.father_phone }}
+{% endif %} {% if s.mother_phone %}M: {{ s.mother_phone }}{% endif %} {% if not s.father_phone and not s.mother_phone %}—{% endif %}
+{% endblock %}
