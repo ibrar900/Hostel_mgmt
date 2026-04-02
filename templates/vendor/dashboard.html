@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Vendor Dashboard{% endblock %}
+{% block topbar_title %}Vendor Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-tachometer-alt" style="color:var(--accent);margin-right:10px;"></i>Vendor Dashboard</h1>
+  <div class="breadcrumb">
+    <i class="fas fa-calendar-alt"></i>
+    <span>{{ today or 'Today' }}</span>
+  </div>
+</div>
+
+<!-- Overall stats -->
+<div class="stats-grid" style="margin-bottom:24px;">
+  <div class="stat-card navy">
+    <div class="stat-icon"><i class="fas fa-users"></i></div>
+    <div class="stat-label">Total Students (Present)</div>
+    <div class="stat-value">{{ total_present or 0 }}</div>
+    <div class="stat-sub">Across both hostels today</div>
+  </div>
+  <div class="stat-card accent">
+    <div class="stat-icon"><i class="fas fa-leaf"></i></div>
+    <div class="stat-label">Veg Meals Today</div>
+    <div class="stat-value">{{ total_veg or 0 }}</div>
+    <div class="stat-sub">Veg preference, present</div>
+  </div>
+  <div class="stat-card danger">
+    <div class="stat-icon"><i class="fas fa-drumstick-bite"></i></div>
+    <div class="stat-label">Non-Veg Meals Today</div>
+    <div class="stat-value">{{ total_nonveg or 0 }}</div>
+    <div class="stat-sub">Non-veg preference, present</div>
+  </div>
+  <div class="stat-card gold">
+    <div class="stat-icon"><i class="fas fa-comment-dots"></i></div>
+    <div class="stat-label">Open Complaints</div>
+    <div class="stat-value">{{ open_complaints or 0 }}</div>
+    <div class="stat-sub">Requiring attention</div>
+  </div>
+</div>
+
+<!-- Two-column: Boys Hostel | Girls Hostel -->
+<div class="hostel-summary-grid" style="margin-bottom:28px;">
+
+  <!-- Boys Hostel -->
+  <div class="hostel-block">
+    <div class="hostel-block-header boys">
+      <i class="fas fa-male"></i> Boys Hostel
+      {% if boys_hostel_name %}({{ boys_hostel_name }}){% endif %}
+    </div>
+    <div class="hostel-block-body">
+      <div class="hostel-mini-stats">
+        <div class="hostel-mini-stat">
+          <div class="val">{{ boys.present or 0 }}</div>
+          <div class="lbl">Present</div>
+        </div>
+        <div class="hostel-mini-stat">
+          <div class="val" style="color:var(--success);">{{ boys.veg or 0 }}</div>
+          <div class="lbl">Veg</div>
+        </div>
+        <div class="hostel-mini-stat">
+          <div class="val" style="color:var(--danger);">{{ boys.nonveg or 0 }}</div>
+          <div class="lbl">Non-Veg</div>
+        </div>
+      </div>
+
+      <!-- Boys: Today's menu preview -->
+      <div style="margin-top:16px;">
+        <div style="font-size:0.78rem;font-weight:600;color:var(--text-muted);
+                    text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">
+          Today's Menu
+        </div>
+        {% if boys.menu %}
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:0.82rem;">
+          <div style="display:flex;gap:8px;">
+            <span style="color:var(--warning);width:70px;flex-shrink:0;">
+              <i class="fas fa-sun"></i> Breakfast
+            </span>
+            <span>{{ boys.menu.breakfast_veg or '—' }}</span>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <span style="color:var(--success);width:70px;flex-shrink:0;">
+              <i class="fas fa-cloud-sun"></i> Lunch
+            </span>
+            <span>{{ boys.menu.lunch_veg or '—' }}</span>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <span style="color:var(--blue);width:70px;flex-shrink:0;">
+              <i class="fas fa-moon"></i> Dinner
+            </span>
+            <span>{{ boys.menu.dinner_veg or '—' }}</span>
+          </div>
+        </div>
+        {% else %}
+        <p class="text-muted text-small" style="font-style:italic;">No menu set today.</p>
+        {% endif %}
+      </div>
+
+      <!-- Complaints badge -->
+      {% if boys.open_complaints %}
+      <div style="margin-top:12px;">
+        <span class="badge badge-open">
+          <i class="fas fa-exclamation-circle"></i>
+          {{ boys.open_complaints }} open complaint{{ 's' if boys.open_complaints != 1 else '' }}
+        </span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Girls Hostel -->
+  <div class="hostel-block">
+    <div class="hostel-block-header girls">
+      <i class="fas fa-female"></i> Girls Hostel
+      {% if girls_hostel_name %}({{ girls_hostel_name }}){% endif %}
+    </div>
+    <div class="hostel-block-body">
+      <div class="hostel-mini-stats">
+        <div class="hostel-mini-stat">
+          <div class="val">{{ girls.present or 0 }}</div>
+          <div class="lbl">Present</div>
+        </div>
+        <div class="hostel-mini-stat">
+          <div class="val" style="color:var(--success);">{{ girls.veg or 0 }}</div>
+          <div class="lbl">Veg</div>
+        </div>
+        <div class="hostel-mini-stat">
+          <div class="val" style="color:var(--danger);">{{ girls.nonveg or 0 }}</div>
+          <div class="lbl">Non-Veg</div>
+        </div>
+      </div>
+
+      <!-- Girls: Today's menu preview -->
+      <div style="margin-top:16px;">
+        <div style="font-size:0.78rem;font-weight:600;color:var(--text-muted);
+                    text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">
+          Today's Menu
+        </div>
+        {% if girls.menu %}
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:0.82rem;">
+          <div style="display:flex;gap:8px;">
+            <span style="color:var(--warning);width:70px;flex-shrink:0;">
+              <i class="fas fa-sun"></i> Breakfast
+            </span>
+            <span>{{ girls.menu.breakfast_veg or '—' }}</span>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <span style="color:var(--success);width:70px;flex-shrink:0;">
+              <i class="fas fa-cloud-sun"></i> Lunch
+            </span>
+            <span>{{ girls.menu.lunch_veg or '—' }}</span>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <span style="color:var(--blue);width:70px;flex-shrink:0;">
+              <i class="fas fa-moon"></i> Dinner
+            </span>
+            <span>{{ girls.menu.dinner_veg or '—' }}</span>
+          </div>
+        </div>
+        {% else %}
+        <p class="text-muted text-small" style="font-style:italic;">No menu set today.</p>
+        {% endif %}
+      </div>
+
+      {% if girls.open_complaints %}
+      <div style="margin-top:12px;">
+        <span class="badge badge-open">
+          <i class="fas fa-exclamation-circle"></i>
+          {{ girls.open_complaints }} open complaint{{ 's' if girls.open_complaints != 1 else '' }}
+        </span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div><!-- /.hostel-summary-grid -->
+
+<!-- Quick actions -->
+<div class="quick-actions">
+  <a href="{{ url_for('vendor.menu') }}" class="btn btn-navy">
+    <i class="fas fa-clipboard-list"></i> Manage Menu
+  </a>
+  <a href="{{ url_for('vendor.complaints') }}" class="btn btn-accent">
+    <i class="fas fa-comment-dots"></i> View Complaints
+    {% if open_complaints %}
+    <span class="badge badge-danger" style="margin-left:4px;">{{ open_complaints }}</span>
+    {% endif %}
+  </a>
+</div>
+
+{% endblock %}
